@@ -30,7 +30,7 @@ function loadEnvFile(filePath) {
 
 loadEnvFile(path.join(__dirname, '.env'));
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 const DATA_DIR = path.join(__dirname, 'data');
 let geminiApiKey = process.env.GEMINI_API_KEY || 'PASTE_GEMINI_API_KEY_HERE';
 const GEMINI_MODEL = 'models/gemini-2.5-flash';
