@@ -1,0 +1,771 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Conversational BI Dashboard - Phase 2</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <main class="shell">
+    <section class="hero">
+      <p class="eyebrow">Phase 2 Dashboard</p>
+      <h1>Conversational AI for Instant BI Dashboards</h1>
+      <p class="summary">Ask a business question, auto-generate SQL, execute it, and render live charts with conversational follow-up filtering.</p>
+    </section>
+
+    <section class="panel layout-top">
+      <div class="card">
+        <div class="card-head">
+          <h2>Dataset Setup</h2>
+          <span id="tableNameBadge" class="badge">No file</span>
+        </div>
+
+        <div class="row split">
+          <div class="grow">
+            <label for="fileSelect">Dataset</label>
+            <select id="fileSelect"></select>
+          </div>
+          <button id="refreshButton" class="secondary">Refresh</button>
+        </div>
+
+        <div class="row split upload-row">
+          <div class="grow">
+            <label for="uploadInput">Upload CSV</label>
+            <input id="uploadInput" type="file" accept=".csv">
+          </div>
+          <button id="uploadButton" class="secondary">Upload CSV</button>
+        </div>
+
+        <div class="row">
+          <label for="questionInput">Ask a business question</label>
+          <textarea id="questionInput" rows="3" placeholder="Show monthly revenue trend for 2024"></textarea>
+        </div>
+
+        <div class="row actions">
+          <button id="generateButton">Generate Dashboard</button>
+          <span id="statusText" class="status">Ready.</span>
+        </div>
+
+        <div class="row demo-row">
+          <div class="demo-head">
+            <label>Demo Queries</label>
+            <div class="demo-head-controls">
+              <select id="demoCountSelect" class="demo-count-select" title="Number of demo queries">
+                <option value="4">4 queries</option>
+                <option value="6">6 queries</option>
+                <option value="8" selected>8 queries</option>
+                <option value="10">10 queries</option>
+                <option value="12">12 queries</option>
+              </select>
+              <button id="demoRefreshButton" class="secondary">&#10227; Refresh</button>
+            </div>
+          </div>
+          <div class="demo-filter" id="demoFilterBar">
+            <button class="demo-filter-pill active" data-filter="all">All</button>
+            <button class="demo-filter-pill" data-filter="bar_chart">&#9646; Bar</button>
+            <button class="demo-filter-pill" data-filter="line_chart">&#9135; Line</button>
+            <button class="demo-filter-pill" data-filter="pie_chart">&#9685; Pie</button>
+            <button class="demo-filter-pill" data-filter="table">&#8801; Table</button>
+          </div>
+          <div id="demoQueriesBox" class="demo-queries">Select a dataset and click Refresh.</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <h2>Schema</h2>
+        </div>
+        <pre id="schemaBox" class="schema-box">Select a dataset to inspect schema.</pre>
+      </div>
+    </section>
+
+    <section class="panel layout-meta">
+      <div class="card mini-card">
+        <h3>Intent</h3>
+        <pre id="intentBox">-</pre>
+      </div>
+      <div class="card mini-card">
+        <h3>Validation</h3>
+        <pre id="validationBox">-</pre>
+      </div>
+      <div class="card mini-card">
+        <h3>Conversation Memory</h3>
+        <pre id="historyBox">No messages yet.</pre>
+      </div>
+    </section>
+
+    <section class="panel layout-main">
+      <div class="card">
+        <div class="card-head">
+          <h2>Generated SQL</h2>
+          <span id="modeBox" class="badge muted">-</span>
+        </div>
+        <pre id="sqlBox">No SQL yet.</pre>
+        <h3 class="subhead">SQL Explanation</h3>
+        <div id="explanationBox" class="text-box">No explanation yet.</div>
+      </div>
+
+      <div class="card chart-card" id="chartCard">
+        <div class="card-head">
+          <h2>Visualization</h2>
+          <div class="tab-nav">
+            <button class="tab-btn active" id="tabBtnChart">Chart</button>
+            <button class="tab-btn" id="tabBtnPreview">Data Preview</button>
+          </div>
+          <span id="chartTypeBox" class="badge">-</span>
+        </div>
+        <div id="tabChart" class="tab-pane">
+          <div class="chart-wrap" id="chartWrap">
+            <canvas id="chartCanvas"></canvas>
+            <div id="chartFallback" class="chart-fallback">Run a query to render chart.</div>
+          </div>
+        </div>
+        <div id="tabPreview" class="tab-pane hidden">
+          <div class="preview-wrap">
+            <table id="previewTable"><thead></thead><tbody></tbody></table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="card">
+        <div class="card-head">
+          <h2>Query Result Table</h2>
+          <span id="resultMeta" class="badge">0 rows</span>
+        </div>
+        <div class="table-wrap">
+          <table id="resultTable">
+            <thead></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Settings FAB -->
+  <button class="settings-fab" id="settingsFab" title="API Key Settings">&#9881;</button>
+
+  <!-- Settings Modal -->
+  <div class="modal-overlay hidden" id="settingsModal">
+    <div class="modal-box">
+      <div class="modal-head">
+        <h2>Settings</h2>
+        <button class="modal-close-btn" id="modalCloseBtn">&#10005;</button>
+      </div>
+      <div class="modal-field">
+        <label for="apiKeyInput">Gemini API Key</label>
+        <input type="password" id="apiKeyInput" placeholder="AIza..." autocomplete="off">
+        <div class="key-status" id="keyStatus">Paste your key from Google AI Studio.</div>
+      </div>
+      <div class="modal-actions">
+        <button id="saveKeyBtn">Save Key</button>
+        <button class="secondary modal-close-btn" id="modalCancelBtn">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const fileSelect = document.getElementById('fileSelect');
+    const refreshButton = document.getElementById('refreshButton');
+    const generateButton = document.getElementById('generateButton');
+    const questionInput = document.getElementById('questionInput');
+    const statusText = document.getElementById('statusText');
+    const schemaBox = document.getElementById('schemaBox');
+    const tableNameBadge = document.getElementById('tableNameBadge');
+    const intentBox = document.getElementById('intentBox');
+    const validationBox = document.getElementById('validationBox');
+    const sqlBox = document.getElementById('sqlBox');
+    const modeBox = document.getElementById('modeBox');
+    const explanationBox = document.getElementById('explanationBox');
+    const chartTypeBox = document.getElementById('chartTypeBox');
+    const chartCanvas = document.getElementById('chartCanvas');
+    const chartFallback = document.getElementById('chartFallback');
+    const chartWrap = document.getElementById('chartWrap');
+    const chartCard = document.getElementById('chartCard');
+    const resultTable = document.getElementById('resultTable');
+    const resultMeta = document.getElementById('resultMeta');
+    const uploadInput = document.getElementById('uploadInput');
+    const uploadButton = document.getElementById('uploadButton');
+    const historyBox = document.getElementById('historyBox');
+    const demoRefreshButton = document.getElementById('demoRefreshButton');
+    const demoQueriesBox = document.getElementById('demoQueriesBox');
+    const settingsFab = document.getElementById('settingsFab');
+    const settingsModal = document.getElementById('settingsModal');
+    const modalCloseBtn = document.getElementById('modalCloseBtn');
+    const modalCancelBtn = document.getElementById('modalCancelBtn');
+    const saveKeyBtn = document.getElementById('saveKeyBtn');
+    const apiKeyInput = document.getElementById('apiKeyInput');
+    const keyStatus = document.getElementById('keyStatus');
+    const tabBtnChart = document.getElementById('tabBtnChart');
+    const tabBtnPreview = document.getElementById('tabBtnPreview');
+    const tabChart = document.getElementById('tabChart');
+    const tabPreview = document.getElementById('tabPreview');
+    const previewTable = document.getElementById('previewTable');
+
+    const sessionId = localStorage.getItem('bi_session_id') || ('session_' + Math.random().toString(36).slice(2, 10));
+    localStorage.setItem('bi_session_id', sessionId);
+
+    let chart = null;
+
+    // â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+    function formatNumber(val) {
+      if (val === null || val === undefined) return '';
+      const n = Number(val);
+      if (isNaN(n)) return String(val);
+      if (Math.abs(n) >= 1e9) return (n / 1e9).toFixed(2) + 'B';
+      if (Math.abs(n) >= 1e6) return (n / 1e6).toFixed(2) + 'M';
+      if (Math.abs(n) >= 1e3) return (n / 1e3).toFixed(1) + 'K';
+      return n % 1 === 0 ? n.toLocaleString() : n.toFixed(2);
+    }
+
+    function triggerAnimate(el, cls = 'animate-in') {
+      el.classList.remove(cls);
+      void el.offsetWidth;
+      el.classList.add(cls);
+    }
+
+    async function fetchJson(resource, options) {
+      const response = await fetch(resource, options);
+      const payload = await response.json();
+      if (!response.ok) {
+        throw new Error(payload.error || 'Request failed.');
+      }
+      return payload;
+    }
+
+    function setStatus(message) {
+      statusText.textContent = message;
+    }
+
+    // â”€â”€â”€ Tab Switching â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+    function switchTab(tab) {
+      if (tab === 'chart') {
+        tabChart.classList.remove('hidden');
+        tabPreview.classList.add('hidden');
+        tabBtnChart.classList.add('active');
+        tabBtnPreview.classList.remove('active');
+      } else {
+        tabChart.classList.add('hidden');
+        tabPreview.classList.remove('hidden');
+        tabBtnChart.classList.remove('active');
+        tabBtnPreview.classList.add('active');
+        loadPreview();
+      }
+    }
+
+    tabBtnChart.addEventListener('click', () => switchTab('chart'));
+    tabBtnPreview.addEventListener('click', () => switchTab('preview'));
+
+    async function loadPreview() {
+      const fileName = fileSelect.value;
+      if (!fileName) return;
+      const thead = previewTable.querySelector('thead');
+      const tbody = previewTable.querySelector('tbody');
+      thead.innerHTML = '';
+      tbody.innerHTML = '<tr><td style="color:var(--soft);padding:12px">Loading preview...</td></tr>';
+      try {
+        const payload = await fetchJson('/api/preview?file=' + encodeURIComponent(fileName));
+        thead.innerHTML = '';
+        tbody.innerHTML = '';
+        const headRow = document.createElement('tr');
+        payload.columns.forEach(col => {
+          const th = document.createElement('th');
+          th.textContent = col;
+          headRow.appendChild(th);
+        });
+        thead.appendChild(headRow);
+        payload.rows.forEach((row, i) => {
+          const tr = document.createElement('tr');
+          tr.classList.add('row-in');
+          tr.style.animationDelay = Math.min(i * 25, 400) + 'ms';
+          payload.columns.forEach(col => {
+            const td = document.createElement('td');
+            const v = row[col];
+            td.textContent = v == null ? '' : v;
+            tr.appendChild(td);
+          });
+          tbody.appendChild(tr);
+        });
+      } catch (err) {
+        thead.innerHTML = '';
+        tbody.innerHTML = '<tr><td style="color:var(--accent);padding:12px">Error: ' + err.message + '</td></tr>';
+      }
+    }
+
+    // â”€â”€â”€ Settings Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+    function openSettings() {
+      settingsModal.classList.remove('hidden');
+      apiKeyInput.value = '';
+      fetchJson('/api/settings').then(s => {
+        keyStatus.textContent = s.configured ? 'Current key: ' + s.masked : 'No key configured â€” using demo fallback.';
+        keyStatus.className = 'key-status' + (s.configured ? ' ok' : '');
+      }).catch(() => {});
+    }
+
+    function closeSettings() {
+      settingsModal.classList.add('hidden');
+    }
+
+    settingsFab.addEventListener('click', openSettings);
+    modalCloseBtn.addEventListener('click', closeSettings);
+    modalCancelBtn.addEventListener('click', closeSettings);
+    settingsModal.addEventListener('click', e => { if (e.target === settingsModal) closeSettings(); });
+
+    saveKeyBtn.addEventListener('click', async () => {
+      const key = apiKeyInput.value.trim();
+      if (!key) {
+        keyStatus.textContent = 'Please paste an API key first.';
+        keyStatus.className = 'key-status bad';
+        return;
+      }
+      saveKeyBtn.disabled = true;
+      try {
+        const result = await fetchJson('/api/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ apiKey: key })
+        });
+        keyStatus.textContent = 'Saved! Active key: ' + result.masked;
+        keyStatus.className = 'key-status ok';
+        apiKeyInput.value = '';
+        setTimeout(closeSettings, 1600);
+      } catch (err) {
+        keyStatus.textContent = err.message;
+        keyStatus.className = 'key-status bad';
+      } finally {
+        saveKeyBtn.disabled = false;
+      }
+    });
+
+    // â”€â”€â”€ Data Loading â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+    async function loadFiles() {
+      setStatus('Loading datasets...');
+      try {
+        const payload = await fetchJson('/api/files');
+        fileSelect.innerHTML = '';
+
+        if (!payload.files.length) {
+          const option = document.createElement('option');
+          option.textContent = 'No CSV files found';
+          option.value = '';
+          fileSelect.appendChild(option);
+          schemaBox.textContent = 'Upload or drop CSV files into the data folder.';
+          tableNameBadge.textContent = 'No file';
+          setStatus('No datasets available.');
+          return;
+        }
+
+        payload.files.forEach(fileName => {
+          const option = document.createElement('option');
+          option.value = fileName;
+          option.textContent = fileName;
+          fileSelect.appendChild(option);
+        });
+
+        await loadSchema();
+        setStatus('Datasets loaded.');
+      } catch (error) {
+        setStatus(error.message);
+      }
+    }
+
+    async function loadSchema() {
+      const fileName = fileSelect.value;
+      if (!fileName) return;
+      setStatus('Reading schema...');
+      try {
+        const payload = await fetchJson('/api/schema?file=' + encodeURIComponent(fileName));
+        tableNameBadge.textContent = payload.table_name;
+        schemaBox.textContent = payload.columns.map(column => column.name + ' (' + column.type + ')').join('\n');
+        demoQueriesBox.textContent = 'Click “Refresh” to load AI-suggested queries.';
+        setStatus('Schema ready.');
+      } catch (error) {
+        setStatus(error.message);
+      }
+    }
+
+    let allDemoQueries = [];
+    let activeFilter = 'all';
+
+    const CHART_ICONS = {
+      bar_chart:  '&#9646; Bar',
+      line_chart: '&#9135; Line',
+      pie_chart:  '&#9685; Pie',
+      table:      '&#8801; Table'
+    };
+
+    document.getElementById('demoFilterBar').addEventListener('click', e => {
+      const pill = e.target.closest('.demo-filter-pill');
+      if (!pill) return;
+      activeFilter = pill.dataset.filter;
+      document.querySelectorAll('.demo-filter-pill').forEach(p => p.classList.toggle('active', p === pill));
+      applyDemoFilter();
+    });
+
+    function applyDemoFilter() {
+      const filtered = activeFilter === 'all'
+        ? allDemoQueries
+        : allDemoQueries.filter(q => q.chart_type === activeFilter);
+      paintDemoQueries(filtered);
+    }
+
+    function paintDemoQueries(queries) {
+      demoQueriesBox.innerHTML = '';
+      if (!queries.length) {
+        demoQueriesBox.textContent = 'No ' + (activeFilter === 'all' ? '' : activeFilter.replace('_', ' ') + ' ') + 'queries available.';
+        return;
+      }
+      queries.forEach((item, index) => {
+        const button = document.createElement('button');
+        button.className = 'demo-query-item animate-in';
+        button.type = 'button';
+        button.style.animationDelay = index * 40 + 'ms';
+        const iconHtml = CHART_ICONS[item.chart_type] || item.chart_type;
+        button.innerHTML =
+          '<span class="demo-index">Q' + (index + 1) + '</span>' +
+          '<span class="demo-question">' + item.question + '</span>' +
+          '<span class="demo-chart demo-chart--' + item.chart_type + '">' + iconHtml + '</span>';
+        button.addEventListener('click', async () => {
+          questionInput.value = item.question;
+          await generateDashboard();
+        });
+        demoQueriesBox.appendChild(button);
+      });
+    }
+
+    function renderDemoQueries(queries) {
+      allDemoQueries = queries || [];
+      applyDemoFilter();
+    }
+
+    async function loadDemoQueries() {
+      const fileName = fileSelect.value;
+      if (!fileName) {
+        demoQueriesBox.textContent = 'Select a dataset first.';
+        return;
+      }
+      const count = parseInt(document.getElementById('demoCountSelect').value, 10) || 8;
+      demoRefreshButton.disabled = true;
+      demoQueriesBox.innerHTML = '<span style="color:var(--soft)">Generating ' + count + ' AI-suggested queries…</span>';
+      try {
+        const payload = await fetchJson('/api/demo-queries?file=' + encodeURIComponent(fileName) + '&count=' + count);
+        renderDemoQueries(payload.queries);
+      } catch (error) {
+        demoQueriesBox.textContent = error.message;
+      } finally {
+        demoRefreshButton.disabled = false;
+      }
+    }
+
+    async function uploadCsv() {
+      const file = uploadInput.files[0];
+      if (!file) { setStatus('Choose a CSV file first.'); return; }
+      uploadButton.disabled = true;
+      setStatus('Uploading CSV...');
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+        await fetchJson('/api/upload', { method: 'POST', body: formData });
+        await loadFiles();
+        fileSelect.value = file.name;
+        await loadSchema();
+        setStatus('CSV uploaded and loaded.');
+      } catch (error) {
+        setStatus(error.message);
+      } finally {
+        uploadButton.disabled = false;
+      }
+    }
+
+    // â”€â”€â”€ Table Render â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+    function renderTable(columns, rows) {
+      const thead = resultTable.querySelector('thead');
+      const tbody = resultTable.querySelector('tbody');
+      thead.innerHTML = '';
+      tbody.innerHTML = '';
+      if (!columns || !columns.length) { resultMeta.textContent = '0 rows'; return; }
+
+      const headRow = document.createElement('tr');
+      columns.forEach(column => {
+        const th = document.createElement('th');
+        th.textContent = column;
+        headRow.appendChild(th);
+      });
+      thead.appendChild(headRow);
+
+      rows.slice(0, 200).forEach((row, i) => {
+        const tr = document.createElement('tr');
+        tr.classList.add('row-in');
+        tr.style.animationDelay = Math.min(i * 30, 500) + 'ms';
+        columns.forEach(column => {
+          const td = document.createElement('td');
+          const value = row[column];
+          td.textContent = value == null ? '' : value;
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+      resultMeta.textContent = rows.length + ' rows';
+    }
+
+    // â”€â”€â”€ Chart Render â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+    function destroyChart() {
+      if (chart) { chart.destroy(); chart = null; }
+    }
+
+    const PALETTE = [
+      '#c44536', '#e58e26', '#4a90d9', '#78b84b',
+      '#9c5ab0', '#e06e38', '#3ba3b3', '#d4a035'
+    ];
+    const PALETTE_ALPHA = [
+      'rgba(196,69,54,0.72)',  'rgba(229,142,38,0.72)', 'rgba(74,144,217,0.72)', 'rgba(120,184,75,0.72)',
+      'rgba(156,90,176,0.72)', 'rgba(224,110,56,0.72)', 'rgba(59,163,179,0.72)', 'rgba(212,160,53,0.72)'
+    ];
+
+    function renderChart(payload) {
+      destroyChart();
+      chartWrap.classList.remove('loading', 'result-ready');
+      chartCard.classList.remove('result-ready');
+
+      const chartType = payload.chart_type;
+      // Animate badge
+      chartTypeBox.textContent = chartType;
+      triggerAnimate(chartTypeBox, 'pop-in');
+
+      const hasChartData = payload.chart_data && payload.chart_data.labels && payload.chart_data.labels.length > 0;
+
+      // â”€â”€ Single value: big number display â”€â”€
+      if (!hasChartData && payload.result_rows && payload.result_rows.length === 1) {
+        const cols = Object.keys(payload.result_rows[0]);
+        const numCols = cols.filter(c => typeof payload.result_rows[0][c] === 'number');
+        if (numCols.length >= 1) {
+          chartCanvas.style.display = 'none';
+          if (numCols.length === 1) {
+            const val = payload.result_rows[0][numCols[0]];
+            chartFallback.innerHTML =
+              '<div class="single-value-wrap">' +
+              '<div class="single-value-num">' + formatNumber(val) + '</div>' +
+              '<div class="single-value-label">' + numCols[0].replace(/_/g, ' ') + '</div>' +
+              '</div>';
+          } else {
+            // Multiple values â€” show comparison cards
+            const items = numCols.map((c, i) => {
+              const color = PALETTE[i % PALETTE.length];
+              return '<div class="multi-value-item">' +
+                '<div class="single-value-num" style="color:' + color + ';font-size:clamp(1.6rem,3.2vw,2.6rem)">' + formatNumber(payload.result_rows[0][c]) + '</div>' +
+                '<div class="single-value-label">' + c.replace(/_/g, ' ') + '</div>' +
+                '</div>' +
+                (i < numCols.length - 1 ? '<div class="multi-value-divider"></div>' : '');
+            }).join('');
+            chartFallback.innerHTML = '<div class="multi-value-wrap">' + items + '</div>';
+          }
+          chartFallback.style.display = 'grid';
+          chartWrap.classList.add('result-ready');
+          chartCard.classList.add('result-ready');
+          return;
+        }
+      }
+
+      if (chartType === 'table' || !hasChartData) {
+        chartFallback.textContent = chartType === 'table' ? 'Table mode â€” see results below.' : 'Not enough numeric data to render chart.';
+        chartFallback.style.display = 'grid';
+        chartCanvas.style.display = 'none';
+        return;
+      }
+
+      chartFallback.style.display = 'none';
+      chartCanvas.style.display = 'block';
+
+      const map = { bar_chart: 'bar', line_chart: 'line', pie_chart: 'pie' };
+      const chartJsType = map[chartType] || 'bar';
+      const d = payload.chart_data;
+
+      let datasets;
+      if (d.multi_series) {
+        // Each label = its own colored bar
+        datasets = [{
+          label: 'Comparison',
+          data: d.values,
+          backgroundColor: d.labels.map((_, i) => PALETTE_ALPHA[i % PALETTE_ALPHA.length]),
+          borderColor: d.labels.map((_, i) => PALETTE[i % PALETTE.length]),
+          borderWidth: 2,
+          borderRadius: 10,
+          borderSkipped: false
+        }];
+      } else {
+        datasets = [{
+          label: d.value_field || 'Value',
+          data: d.values,
+          backgroundColor: chartJsType === 'pie'
+            ? PALETTE_ALPHA.slice(0, d.labels.length)
+            : PALETTE_ALPHA[0],
+          borderColor: chartJsType === 'pie' ? '#ffffff' : PALETTE[0],
+          borderWidth: chartJsType === 'pie' ? 3 : 2,
+          borderRadius: chartJsType === 'bar' ? 10 : 0,
+          borderSkipped: false,
+          tension: 0.35,
+          fill: chartJsType === 'line' ? { target: 'origin', above: 'rgba(196,69,54,0.08)' } : false,
+          pointRadius: chartJsType === 'line' ? 6 : 0,
+          pointHoverRadius: chartJsType === 'line' ? 9 : 0,
+          pointBackgroundColor: PALETTE[0],
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2
+        }];
+      }
+
+      chart = new Chart(chartCanvas.getContext('2d'), {
+        type: chartJsType,
+        data: { labels: d.labels, datasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: {
+            duration: 900,
+            easing: 'easeInOutCubic',
+            delay(ctx) {
+              return ctx.type === 'data' && ctx.mode === 'default' ? ctx.dataIndex * 55 : 0;
+            }
+          },
+          plugins: {
+            legend: {
+              display: chartJsType === 'pie' || (d.multi_series && d.labels.length > 1),
+              labels: {
+                color: '#3a3128',
+                font: { family: 'Georgia, serif', size: 12 },
+                padding: 14,
+                usePointStyle: true
+              }
+            },
+            tooltip: {
+              backgroundColor: 'rgba(28,18,10,0.9)',
+              titleColor: '#f7f0e4',
+              bodyColor: '#f0e4cd',
+              cornerRadius: 12,
+              padding: 14,
+              borderColor: 'rgba(196,69,54,0.35)',
+              borderWidth: 1,
+              callbacks: {
+                label(ctx) {
+                  const raw = ctx.parsed.y ?? ctx.parsed;
+                  return ' ' + formatNumber(typeof raw === 'object' ? raw : raw);
+                }
+              }
+            }
+          },
+          scales: chartJsType !== 'pie' ? {
+            x: {
+              grid: { color: 'rgba(160,140,115,0.18)', drawTicks: false },
+              ticks: { color: '#5a5048', font: { family: 'Georgia, serif', size: 12 }, maxRotation: 35 },
+              border: { color: 'rgba(160,140,115,0.3)' }
+            },
+            y: {
+              grid: { color: 'rgba(160,140,115,0.18)', drawTicks: false },
+              ticks: { color: '#5a5048', font: { family: 'Georgia, serif', size: 12 }, callback: v => formatNumber(v) },
+              border: { color: 'rgba(160,140,115,0.3)' }
+            }
+          } : {}
+        }
+      });
+
+      chartWrap.classList.add('result-ready');
+      chartCard.classList.add('result-ready');
+    }
+
+    // â”€â”€â”€ History â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+    async function loadHistory() {
+      try {
+        const payload = await fetchJson('/api/history?sessionId=' + encodeURIComponent(sessionId));
+        if (!payload.history.length) { historyBox.textContent = 'No messages yet.'; return; }
+        const lines = payload.history.slice(-5).map(item => 'Q: ' + item.question + '\nSQL: ' + item.sql_query);
+        historyBox.textContent = lines.join('\n\n');
+      } catch (_error) {
+        historyBox.textContent = 'History unavailable.';
+      }
+    }
+
+    // â”€â”€â”€ Generate Dashboard â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+    async function generateDashboard() {
+      const fileName = fileSelect.value;
+      const question = questionInput.value.trim();
+      if (!fileName) { setStatus('Select a dataset first.'); return; }
+      if (!question) { setStatus('Enter a business question.'); return; }
+
+      generateButton.disabled = true;
+      setStatus('Generating SQL and dashboard...');
+
+      // Loading shimmer on chart area
+      chartWrap.classList.remove('result-ready');
+      chartWrap.classList.add('loading');
+      chartCard.classList.remove('result-ready');
+      chartFallback.textContent = 'Thinking...';
+      chartFallback.style.display = 'grid';
+      chartCanvas.style.display = 'none';
+      destroyChart();
+
+      try {
+        const payload = await fetchJson('/api/query', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fileName, question, sessionId })
+        });
+
+        chartWrap.classList.remove('loading');
+
+        // Animate result panels
+        [intentBox, validationBox, sqlBox, explanationBox].forEach((el, i) => {
+          setTimeout(() => triggerAnimate(el.closest ? el : el, 'animate-in'), i * 60);
+        });
+
+        intentBox.textContent = JSON.stringify(payload.intent, null, 2);
+        validationBox.textContent = payload.validation_status + (payload.validation_error ? '\n' + payload.validation_error : '');
+        sqlBox.textContent = payload.sql_query;
+        explanationBox.textContent = payload.sql_explanation;
+
+        triggerAnimate(modeBox, 'pop-in');
+        modeBox.textContent = payload.mode;
+
+        renderChart(payload);
+        renderTable(payload.result_columns, payload.result_rows);
+        await loadHistory();
+
+        setStatus('Dashboard generated. Ask a follow-up to filter further.');
+      } catch (error) {
+        chartWrap.classList.remove('loading');
+        chartFallback.textContent = error.message;
+        setStatus(error.message);
+      } finally {
+        generateButton.disabled = false;
+      }
+    }
+
+    // â”€â”€â”€ Event Wiring â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+    refreshButton.addEventListener('click', loadFiles);
+    demoRefreshButton.addEventListener('click', loadDemoQueries);
+    fileSelect.addEventListener('change', loadSchema);
+    uploadButton.addEventListener('click', uploadCsv);
+    generateButton.addEventListener('click', generateDashboard);
+    questionInput.addEventListener('keydown', event => {
+      if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        generateDashboard();
+      }
+    });
+
+    loadFiles();
+    loadHistory();
+  </script>
+</body>
+</html>

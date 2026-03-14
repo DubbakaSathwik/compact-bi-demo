@@ -1,0 +1,13 @@
+# Environment variables — NEVER commit this (contains API keys)
+.env
+
+# Node modules (no dependencies, but just in case)
+node_modules/
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Editor folders
+.vscode/
+.idea/

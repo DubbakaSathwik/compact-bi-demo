@@ -1,0 +1,8 @@
+Drop your CSV files in this folder.
+
+Rules:
+- Use a header row in the first line.
+- Keep column names simple, for example: region, revenue, date.
+- After dropping a file, open the app and click Refresh Files.
+
+This compact version is optimized for low-spec laptops and currently analyzes CSV files.
