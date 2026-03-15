@@ -1,0 +1,18 @@
+[
+  {
+    "id": "usr_7x1a7xzq",
+    "name": "FU Demo",
+    "email": "fu_demo_aa1d93de@test.com",
+    "password_hash": "$2b$10$ZTX31eY3DI57JKcR6RhC0eqq3xgiDWMl8yz/k4FLshUm5bMIPTYKq",
+    "role": "viewer",
+    "created_at": "2026-03-14T17:22:55.335Z"
+  },
+  {
+    "id": "usr_1833ovre",
+    "name": "Sathwik",
+    "email": "dubbakasathwik@gmail.com",
+    "password_hash": "$2b$10$WDVAC2PeSyQCkXhz.jbhvufY1HSmmiBqkLXg2EWJhfYzgtUz1w6xC",
+    "role": "viewer",
+    "created_at": "2026-03-14T19:40:16.669Z"
+  }
+]

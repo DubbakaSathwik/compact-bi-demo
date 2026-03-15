@@ -3,23 +3,42 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Conversational BI Dashboard - Phase 2</title>
+  <title>PROMPT2QUERY | Enterprise BI</title>
   <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
+  <div id="startup-overlay">
+    <h1 style="color:var(--accent); letter-spacing:15px; font-weight:900; font-family:'Space Grotesk',sans-serif;">PROMPT2QUERY</h1>
+  </div>
   <main class="shell">
-    <section class="hero">
-      <p class="eyebrow">Phase 2 Dashboard</p>
-      <h1>Conversational AI for Instant BI Dashboards</h1>
-      <p class="summary">Ask a business question, auto-generate SQL, execute it, and render live charts with conversational follow-up filtering.</p>
+    <section class="brand-hero reveal-on-scroll">
+      <div class="hero-content">
+        <p class="eyebrow">Intelligence Simplified</p>
+        <h1 class="brand-title">PROMPT2QUERY</h1>
+        <p class="brand-info">The enterprise-grade AI engine for conversational data analysis.<br>Transform complex datasets into visual stories — instantly.</p>
+        <div class="hero-actions">
+          <button class="scroll-btn" onclick="document.querySelector('.panel').scrollIntoView({behavior:'smooth'})">Get Started ↓</button>
+          <div class="auth-bar">
+            <div id="authUserGroup" class="auth-user-group hidden">
+              <span id="authUserName" class="auth-user-name">Hello</span>
+              <button id="authLogoutBtn" class="secondary auth-btn">Sign Out</button>
+            </div>
+            <button id="authLoginBtn" class="secondary auth-btn">&#128100; Sign In</button>
+          </div>
+        </div>
+      </div>
     </section>
 
-    <section class="panel layout-top">
+    <section class="panel">
       <div class="card">
         <div class="card-head">
-          <h2>Dataset Setup</h2>
-          <span id="tableNameBadge" class="badge">No file</span>
+          <div>
+            <span class="badge">SYSTEM READY</span>
+            <h2 style="margin-top:10px;">01. Dataset Initialization</h2>
+          </div>
+          <span id="tableNameBadge" class="badge muted">No file</span>
         </div>
 
         <div class="row split">
@@ -38,6 +57,18 @@
           <button id="uploadButton" class="secondary">Upload CSV</button>
         </div>
 
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <span class="badge">QUERY</span>
+            <h2 style="margin-top:10px;">Ask a business question</h2>
+          </div>
+        </div>
+
         <div class="row">
           <label for="questionInput">Ask a business question</label>
           <textarea id="questionInput" rows="3" placeholder="Show monthly revenue trend for 2024"></textarea>
@@ -45,62 +76,135 @@
 
         <div class="row actions">
           <button id="generateButton">Generate Dashboard</button>
+          <button id="demoRefreshButton" class="secondary">Generate Demo Queries</button>
+          <button id="voiceAskBtn" class="secondary" title="Speak your query">Voice Ask</button>
           <span id="statusText" class="status">Ready.</span>
         </div>
 
         <div class="row demo-row">
           <div class="demo-head">
             <label>Demo Queries</label>
-            <div class="demo-head-controls">
-              <select id="demoCountSelect" class="demo-count-select" title="Number of demo queries">
-                <option value="4">4 queries</option>
-                <option value="6">6 queries</option>
-                <option value="8" selected>8 queries</option>
-                <option value="10">10 queries</option>
-                <option value="12">12 queries</option>
-              </select>
-              <button id="demoRefreshButton" class="secondary">&#10227; Refresh</button>
+          </div>
+          <div id="demoConfigSummary" class="demo-config-summary">Current setup: 8 queries • all chart types.</div>
+          <div id="demoQueriesBox" class="demo-queries">Click "Generate Demo Queries" to load AI-suggested queries.</div>
+        </div>
+
+        <div class="pipeline-progress" id="pipelineProgress">
+          <div class="pipeline-top">
+            <span id="pipelineStageText">Pipeline idle</span>
+            <span id="pipelinePercentText">0%</span>
+          </div>
+          <div class="pipeline-track">
+            <div id="pipelineBarFill" class="pipeline-fill"></div>
+          </div>
+          <div id="pipelineMiniTrace" class="pipeline-mini-trace">Run a query to see live pipeline stages.</div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="left-taskbar left-taskbar--right" id="leftTaskbar">
+      <div class="left-taskbar-label">Insights</div>
+      <div class="left-taskbar-inner">
+        <div class="left-taskbar-stack">
+          <div class="left-rail-row">
+            <div class="card mini-card left-rail-card">
+              <div class="card-head">
+                <div>
+                  <span class="badge">DATASET</span>
+                  <h2 style="margin-top:10px;">Schema</h2>
+                </div>
+              </div>
+              <pre id="schemaBox" class="schema-box">Select a dataset to inspect schema.</pre>
+            </div>
+
+            <div class="card mini-card left-rail-card">
+              <div class="card-head">
+                <h3>Dataset Profile</h3>
+                <span id="datasetProfileBadge" class="badge muted">-</span>
+              </div>
+              <pre id="datasetProfileBox">Select a dataset to profile columns and sample quality.</pre>
             </div>
           </div>
-          <div class="demo-filter" id="demoFilterBar">
-            <button class="demo-filter-pill active" data-filter="all">All</button>
-            <button class="demo-filter-pill" data-filter="bar_chart">&#9646; Bar</button>
-            <button class="demo-filter-pill" data-filter="line_chart">&#9135; Line</button>
-            <button class="demo-filter-pill" data-filter="pie_chart">&#9685; Pie</button>
-            <button class="demo-filter-pill" data-filter="table">&#8801; Table</button>
+
+          <div class="card mini-card left-rail-card">
+            <h3>Validation</h3>
+            <pre id="validationBox">-</pre>
           </div>
-          <div id="demoQueriesBox" class="demo-queries">Select a dataset and click Refresh.</div>
+
+          <div class="card mini-card left-rail-card">
+            <h3>Intent</h3>
+            <pre id="intentBox">-</pre>
+          </div>
+
+          <div class="card mini-card left-rail-card">
+            <div class="card-head">
+              <h3>AI Insight</h3>
+              <span id="dataStructureBadge" class="badge muted hidden">-</span>
+            </div>
+            <div id="insightBox" class="text-box insight-text">Sign in and run a query to see AI-generated insights.</div>
+          </div>
         </div>
       </div>
+    </aside>
 
-      <div class="card">
-        <div class="card-head">
-          <h2>Schema</h2>
+    <aside class="left-taskbar left-taskbar--left" id="leftOpsTaskbar">
+      <div class="left-taskbar-label">Context</div>
+      <div class="left-taskbar-inner">
+        <div class="left-taskbar-stack">
+          <div class="card mini-card left-rail-card">
+            <h3>Conversation Memory</h3>
+            <div id="historyBox" class="history-list">No messages yet.</div>
+          </div>
+
+          <div class="card mini-card left-rail-card" id="previewCard">
+            <div class="card-head">
+              <div>
+                <span class="badge">RAW DATA</span>
+                <h2 style="margin-top:10px;">06. Data Preview</h2>
+              </div>
+              <button id="previewReloadBtn" class="secondary">Refresh Preview</button>
+            </div>
+            <div class="preview-wrap preview-wrap-large">
+              <table id="previewTable"><thead></thead><tbody></tbody></table>
+            </div>
+          </div>
+
+          <div class="card mini-card left-rail-card">
+            <div class="card-head">
+              <div>
+                <span class="badge">INSIGHTS</span>
+                <h2 style="margin-top:10px;">05. Narrative Report</h2>
+              </div>
+              <div class="narrative-actions">
+                <button id="speakNarrativeBtn" class="secondary">Speak</button>
+                <div id="narrativeSpeechControls" class="narrative-speech-controls hidden">
+                  <button id="pauseNarrativeBtn" class="secondary">Pause</button>
+                  <button id="speedNarrativeBtn" class="secondary">Speed 1.0x</button>
+                </div>
+                <button id="regenerateNarrativeBtn" class="secondary">Regenerate</button>
+              </div>
+            </div>
+            <div id="narrativeBox" class="text-box">Run a query to generate an executive narrative report.</div>
+            <div id="anomalyWrap" class="anomaly-wrap hidden">
+              <div class="anomaly-title">Anomaly Highlights</div>
+              <div id="anomalyChips" class="anomaly-chips"></div>
+            </div>
+          </div>
         </div>
-        <pre id="schemaBox" class="schema-box">Select a dataset to inspect schema.</pre>
       </div>
-    </section>
+    </aside>
 
-    <section class="panel layout-meta">
-      <div class="card mini-card">
-        <h3>Intent</h3>
-        <pre id="intentBox">-</pre>
-      </div>
-      <div class="card mini-card">
-        <h3>Validation</h3>
-        <pre id="validationBox">-</pre>
-      </div>
-      <div class="card mini-card">
-        <h3>Conversation Memory</h3>
-        <pre id="historyBox">No messages yet.</pre>
-      </div>
-    </section>
-
-    <section class="panel layout-main">
+    <section class="panel layout-main" id="outputSection">
       <div class="card">
         <div class="card-head">
-          <h2>Generated SQL</h2>
-          <span id="modeBox" class="badge muted">-</span>
+          <div>
+            <span class="badge">AI OUTPUT</span>
+            <h2 style="margin-top:10px;">02. Generated SQL</h2>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <button id="copySqlBtn" class="secondary">Copy SQL</button>
+            <span id="modeBox" class="badge muted">-</span>
+          </div>
         </div>
         <pre id="sqlBox">No SQL yet.</pre>
         <h3 class="subhead">SQL Explanation</h3>
@@ -109,22 +213,28 @@
 
       <div class="card chart-card" id="chartCard">
         <div class="card-head">
-          <h2>Visualization</h2>
-          <div class="tab-nav">
-            <button class="tab-btn active" id="tabBtnChart">Chart</button>
-            <button class="tab-btn" id="tabBtnPreview">Data Preview</button>
+          <div>
+            <span class="badge">VISUALIZATION</span>
+            <h2 style="margin-top:10px;">03. Chart Output</h2>
           </div>
-          <span id="chartTypeBox" class="badge">-</span>
-        </div>
-        <div id="tabChart" class="tab-pane">
-          <div class="chart-wrap" id="chartWrap">
-            <canvas id="chartCanvas"></canvas>
-            <div id="chartFallback" class="chart-fallback">Run a query to render chart.</div>
+          <div class="viz-head-actions">
+            <button id="compareToggleBtn" class="secondary">Compare Mode</button>
+            <span id="chartTypeBox" class="badge">-</span>
           </div>
         </div>
-        <div id="tabPreview" class="tab-pane hidden">
-          <div class="preview-wrap">
-            <table id="previewTable"><thead></thead><tbody></tbody></table>
+        <div id="chartOptionsRow" class="chart-options-row hidden"></div>
+        <div id="chartOptionsMeta" class="chart-options-meta hidden">Compatible views for this result</div>
+        <div class="chart-wrap" id="chartWrap">
+          <canvas id="chartCanvas"></canvas>
+          <div id="chartFallback" class="chart-fallback">Run a query to render chart.</div>
+        </div>
+        <div id="compareWrap" class="compare-wrap hidden">
+          <div class="compare-head">
+            <label for="compareChartSelect">Compare with</label>
+            <select id="compareChartSelect"></select>
+          </div>
+          <div class="compare-canvas-wrap">
+            <canvas id="compareCanvas"></canvas>
           </div>
         </div>
       </div>
@@ -133,8 +243,17 @@
     <section class="panel">
       <div class="card">
         <div class="card-head">
-          <h2>Query Result Table</h2>
-          <span id="resultMeta" class="badge">0 rows</span>
+          <div>
+            <span class="badge">RESULTS</span>
+            <h2 style="margin-top:10px;">04. Query Result Table</h2>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <button id="exportPngBtn" class="secondary">Export PNG</button>
+            <button id="exportCsvBtn" class="secondary">Export CSV</button>
+            <button id="exportSqlBtn" class="secondary">Export SQL</button>
+            <button id="exportNarrativeBtn" class="secondary">Export Narrative</button>
+            <span id="resultMeta" class="badge">0 rows</span>
+          </div>
         </div>
         <div class="table-wrap">
           <table id="resultTable">
@@ -144,26 +263,244 @@
         </div>
       </div>
     </section>
+
+    <!-- Chat Flow Panel -->
+    <section class="panel hidden" id="chatFlowSection">
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <span class="badge">CONVERSATIONAL AI</span>
+            <h2 style="margin-top:10px;">Follow-Up Chat</h2>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span class="badge" id="chatContextBadge">0 results in context</span>
+            <button class="secondary" id="chatSuggestBtn" style="padding:6px 14px;font-size:0.82rem;">Suggest Follow-ups</button>
+            <button class="secondary" id="chatClearBtn" style="padding:6px 14px;font-size:0.82rem;">Clear Thread</button>
+          </div>
+        </div>
+        <p class="chat-hint">Ask a follow-up question about the current result. The AI will refine or drill down into the active query.</p>
+        <div class="chat-thread" id="chatThread">
+          <!-- messages injected by JS -->
+        </div>
+        <div class="chat-input-row">
+          <input type="text" id="chatInput" placeholder="e.g. show only top 3, filter by North region, compare as pie chart…" autocomplete="off">
+          <button id="chatSendBtn">&#10148;</button>
+        </div>
+        <div id="chatSuggestBox" class="chat-suggest-box hidden"></div>
+      </div>
+    </section>
   </main>
 
   <!-- Settings FAB -->
   <button class="settings-fab" id="settingsFab" title="API Key Settings">&#9881;</button>
 
-  <!-- Settings Modal -->
-  <div class="modal-overlay hidden" id="settingsModal">
+  <!-- Auth Modal -->
+  <div class="modal-overlay hidden" id="authModal">
     <div class="modal-box">
       <div class="modal-head">
-        <h2>Settings</h2>
+        <h2>Account</h2>
+        <button class="modal-close-btn" id="authModalCloseBtn">&#10005;</button>
+      </div>
+      <div class="tab-nav auth-tab-nav">
+        <button class="tab-btn active" id="authTabLogin">Sign In</button>
+        <button class="tab-btn" id="authTabRegister">Register</button>
+      </div>
+      <!-- Login Form -->
+      <div id="authLoginPane">
+        <div class="modal-field">
+          <label for="loginEmail">Email</label>
+          <input type="email" id="loginEmail" placeholder="you@example.com" autocomplete="email">
+        </div>
+        <div class="modal-field">
+          <label for="loginPassword">Password</label>
+          <input type="password" id="loginPassword" placeholder="Your password" autocomplete="current-password">
+        </div>
+        <div class="key-status" id="loginStatus">&nbsp;</div>
+        <div class="modal-actions">
+          <button id="loginSubmitBtn">Sign In</button>
+          <button class="secondary" id="authLoginCancelBtn">Cancel</button>
+        </div>
+      </div>
+      <!-- Register Form -->
+      <div id="authRegisterPane" class="hidden">
+        <div class="modal-field">
+          <label for="registerName">Name</label>
+          <input type="text" id="registerName" placeholder="Your name" autocomplete="name">
+        </div>
+        <div class="modal-field">
+          <label for="registerEmail">Email</label>
+          <input type="email" id="registerEmail" placeholder="you@example.com" autocomplete="email">
+        </div>
+        <div class="modal-field">
+          <label for="registerPassword">Password</label>
+          <input type="password" id="registerPassword" placeholder="Choose a password (min 8 chars)" autocomplete="new-password">
+        </div>
+        <div class="key-status" id="registerStatus">&nbsp;</div>
+        <div class="modal-actions">
+          <button id="registerSubmitBtn">Create Account</button>
+          <button class="secondary" id="authRegisterCancelBtn">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings Modal -->
+  <div class="modal-overlay hidden" id="settingsModal">
+    <div class="modal-box modal-box--settings">
+      <div class="modal-head">
+        <div>
+          <h2>Settings</h2>
+          <p class="settings-subtitle">Control query behavior, presentation defaults, privacy, and runtime administration.</p>
+        </div>
         <button class="modal-close-btn" id="modalCloseBtn">&#10005;</button>
       </div>
-      <div class="modal-field">
-        <label for="apiKeyInput">Gemini API Key</label>
-        <input type="password" id="apiKeyInput" placeholder="AIza..." autocomplete="off">
-        <div class="key-status" id="keyStatus">Paste your key from Google AI Studio.</div>
+      <div class="settings-layout">
+        <section class="settings-panel">
+          <div class="settings-panel-head">
+            <span class="badge">Workspace</span>
+            <h3>Preferences</h3>
+          </div>
+          <div class="settings-grid">
+            <div class="modal-field">
+              <label for="defaultChartSelect">Default Chart Type</label>
+              <select id="defaultChartSelect" class="settings-select">
+                <option value="auto">Auto</option>
+                <option value="table">Table</option>
+                <option value="bar_chart">Bar</option>
+                <option value="line_chart">Line</option>
+                <option value="pie_chart">Pie</option>
+                <option value="donut_chart">Donut</option>
+              </select>
+              <div class="key-status">Auto keeps AI selection unless you prefer a stable default.</div>
+            </div>
+            <div class="modal-field">
+              <label for="resultRowLimitSelect">Result Row Limit</label>
+              <select id="resultRowLimitSelect" class="settings-select">
+                <option value="20">20 rows</option>
+                <option value="50">50 rows</option>
+                <option value="100">100 rows</option>
+                <option value="200">200 rows</option>
+                <option value="500">500 rows</option>
+              </select>
+              <div class="key-status">Controls how many rows are rendered in the result table.</div>
+            </div>
+            <div class="modal-field">
+              <label for="followUpCountSelect">Follow-Up Suggestion Count</label>
+              <select id="followUpCountSelect" class="settings-select">
+                <option value="4">4 suggestions</option>
+                <option value="6">6 suggestions</option>
+                <option value="8">8 suggestions</option>
+                <option value="10">10 suggestions</option>
+              </select>
+              <div class="key-status">Used when generating contextual follow-up suggestions.</div>
+            </div>
+            <div class="modal-field">
+              <label for="queryStrictnessSelect">Query Strictness</label>
+              <select id="queryStrictnessSelect" class="settings-select">
+                <option value="balanced">Balanced</option>
+                <option value="strict">Strict</option>
+                <option value="creative">Creative</option>
+              </select>
+              <div class="key-status">Balanced is safest, strict favors predictable SQL, creative allows looser exploration.</div>
+            </div>
+            <div class="modal-field">
+              <label for="errorDetailSelect">Error Message Style</label>
+              <select id="errorDetailSelect" class="settings-select">
+                <option value="friendly">Friendly</option>
+                <option value="technical">Technical</option>
+              </select>
+              <div class="key-status">Friendly keeps business-safe wording, technical shows raw backend details.</div>
+            </div>
+            <div class="modal-field">
+              <label for="animationLevelSelect">Animation Level</label>
+              <select id="animationLevelSelect" class="settings-select">
+                <option value="full">Full</option>
+                <option value="reduced">Reduced</option>
+              </select>
+              <div class="key-status">Reduced minimizes motion for faster scanning and less distraction.</div>
+            </div>
+          </div>
+          <div class="settings-toggle-grid">
+            <label class="settings-toggle" for="saveUploadToggle">
+              <input id="saveUploadToggle" type="checkbox">
+              <span>Save uploaded files to database</span>
+            </label>
+            <label class="settings-toggle" for="saveHistoryToggle">
+              <input id="saveHistoryToggle" type="checkbox">
+              <span>Show conversation history</span>
+            </label>
+            <label class="settings-toggle" for="showValidationTraceToggle">
+              <input id="showValidationTraceToggle" type="checkbox">
+              <span>Show validation trace</span>
+            </label>
+            <label class="settings-toggle" for="compareModeDefaultToggle">
+              <input id="compareModeDefaultToggle" type="checkbox">
+              <span>Enable compare mode by default</span>
+            </label>
+          </div>
+        </section>
+
+        <section class="settings-panel settings-panel--admin">
+          <div class="settings-panel-head">
+            <span class="badge">Administration</span>
+            <h3>Runtime Controls</h3>
+          </div>
+          <div class="settings-toggle-grid settings-toggle-grid--admin">
+            <label class="settings-toggle settings-toggle--strong" for="adminDemoModeToggle">
+              <input id="adminDemoModeToggle" type="checkbox">
+              <span>Force demo mode</span>
+            </label>
+          </div>
+          <div class="key-status settings-admin-hint">When enabled, the app bypasses live AI generation and uses deterministic demo SQL behavior.</div>
+          <div class="modal-field">
+            <label for="apiKeyInput">Gemini API Key</label>
+            <input type="password" id="apiKeyInput" placeholder="AIza..." autocomplete="off">
+            <div class="key-status" id="keyStatus">Paste your key from Google AI Studio.</div>
+          </div>
+        </section>
       </div>
-      <div class="modal-actions">
-        <button id="saveKeyBtn">Save Key</button>
+      <div class="modal-actions modal-actions--split">
+        <button id="saveSettingsBtn">Save Settings</button>
         <button class="secondary modal-close-btn" id="modalCancelBtn">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay hidden" id="demoQueryModal">
+    <div class="modal-box demo-modal-box">
+      <div class="modal-head">
+        <h2>Demo Query Builder</h2>
+        <button class="modal-close-btn" id="demoModalCloseBtn">&#10005;</button>
+      </div>
+      <div class="modal-field">
+        <label for="demoCountSelect">How many demo queries?</label>
+        <select id="demoCountSelect" class="demo-count-select" title="Number of demo queries">
+          <option value="4">4 queries</option>
+          <option value="6">6 queries</option>
+          <option value="8" selected>8 queries</option>
+          <option value="10">10 queries</option>
+          <option value="12">12 queries</option>
+        </select>
+      </div>
+      <div class="modal-field">
+        <label>Preferred chart style</label>
+        <div class="demo-filter demo-filter-modal" id="demoFilterBar">
+          <button class="demo-filter-pill active" data-filter="all">&#10022; All</button>
+          <button class="demo-filter-pill" data-filter="bar_chart">&#9646; Bar</button>
+          <button class="demo-filter-pill" data-filter="horizontal_bar_chart">&#8803; H-Bar</button>
+          <button class="demo-filter-pill" data-filter="line_chart">&#9135; Line</button>
+          <button class="demo-filter-pill" data-filter="area_chart">&#9154; Area</button>
+          <button class="demo-filter-pill" data-filter="pie_chart">&#9685; Pie</button>
+          <button class="demo-filter-pill" data-filter="donut_chart">&#9900; Donut</button>
+          <button class="demo-filter-pill" data-filter="scatter_plot">&#8901; Scatter</button>
+          <button class="demo-filter-pill" data-filter="radar_chart">&#9673; Radar</button>
+          <button class="demo-filter-pill" data-filter="table">&#8801; Table</button>
+        </div>
+      </div>
+      <div class="demo-modal-hint">Pick a count and chart style, then generate a curated set of ready-to-run demo questions.</div>
+      <div class="modal-actions">
+        <button id="demoApplyBtn">Generate</button>
+        <button class="secondary" id="demoModalCancelBtn">Cancel</button>
       </div>
     </div>
   </div>
@@ -172,10 +509,18 @@
     const fileSelect = document.getElementById('fileSelect');
     const refreshButton = document.getElementById('refreshButton');
     const generateButton = document.getElementById('generateButton');
+    const voiceAskBtn = document.getElementById('voiceAskBtn');
     const questionInput = document.getElementById('questionInput');
     const statusText = document.getElementById('statusText');
+    const pipelineProgress = document.getElementById('pipelineProgress');
+    const pipelineStageText = document.getElementById('pipelineStageText');
+    const pipelinePercentText = document.getElementById('pipelinePercentText');
+    const pipelineBarFill = document.getElementById('pipelineBarFill');
+    const pipelineMiniTrace = document.getElementById('pipelineMiniTrace');
     const schemaBox = document.getElementById('schemaBox');
     const tableNameBadge = document.getElementById('tableNameBadge');
+    const datasetProfileBox = document.getElementById('datasetProfileBox');
+    const datasetProfileBadge = document.getElementById('datasetProfileBadge');
     const intentBox = document.getElementById('intentBox');
     const validationBox = document.getElementById('validationBox');
     const sqlBox = document.getElementById('sqlBox');
@@ -183,33 +528,146 @@
     const explanationBox = document.getElementById('explanationBox');
     const chartTypeBox = document.getElementById('chartTypeBox');
     const chartCanvas = document.getElementById('chartCanvas');
+    const compareCanvas = document.getElementById('compareCanvas');
     const chartFallback = document.getElementById('chartFallback');
     const chartWrap = document.getElementById('chartWrap');
     const chartCard = document.getElementById('chartCard');
+    const compareToggleBtn = document.getElementById('compareToggleBtn');
+    const compareWrap = document.getElementById('compareWrap');
+    const compareChartSelect = document.getElementById('compareChartSelect');
     const resultTable = document.getElementById('resultTable');
     const resultMeta = document.getElementById('resultMeta');
     const uploadInput = document.getElementById('uploadInput');
     const uploadButton = document.getElementById('uploadButton');
+    const saveUploadToggle = document.getElementById('saveUploadToggle');
+    const saveHistoryToggle = document.getElementById('saveHistoryToggle');
+    const showValidationTraceToggle = document.getElementById('showValidationTraceToggle');
+    const compareModeDefaultToggle = document.getElementById('compareModeDefaultToggle');
+    const adminDemoModeToggle = document.getElementById('adminDemoModeToggle');
+    const defaultChartSelect = document.getElementById('defaultChartSelect');
+    const resultRowLimitSelect = document.getElementById('resultRowLimitSelect');
+    const followUpCountSelect = document.getElementById('followUpCountSelect');
+    const queryStrictnessSelect = document.getElementById('queryStrictnessSelect');
+    const errorDetailSelect = document.getElementById('errorDetailSelect');
+    const animationLevelSelect = document.getElementById('animationLevelSelect');
     const historyBox = document.getElementById('historyBox');
     const demoRefreshButton = document.getElementById('demoRefreshButton');
     const demoQueriesBox = document.getElementById('demoQueriesBox');
+    const demoConfigSummary = document.getElementById('demoConfigSummary');
+    const demoQueryModal = document.getElementById('demoQueryModal');
+    const demoCountSelect = document.getElementById('demoCountSelect');
+    const demoApplyBtn = document.getElementById('demoApplyBtn');
+    const demoModalCloseBtn = document.getElementById('demoModalCloseBtn');
+    const demoModalCancelBtn = document.getElementById('demoModalCancelBtn');
     const settingsFab = document.getElementById('settingsFab');
     const settingsModal = document.getElementById('settingsModal');
     const modalCloseBtn = document.getElementById('modalCloseBtn');
     const modalCancelBtn = document.getElementById('modalCancelBtn');
-    const saveKeyBtn = document.getElementById('saveKeyBtn');
+    const saveSettingsBtn = document.getElementById('saveSettingsBtn');
     const apiKeyInput = document.getElementById('apiKeyInput');
     const keyStatus = document.getElementById('keyStatus');
-    const tabBtnChart = document.getElementById('tabBtnChart');
-    const tabBtnPreview = document.getElementById('tabBtnPreview');
-    const tabChart = document.getElementById('tabChart');
-    const tabPreview = document.getElementById('tabPreview');
+    const previewReloadBtn = document.getElementById('previewReloadBtn');
     const previewTable = document.getElementById('previewTable');
+    const narrativeBox = document.getElementById('narrativeBox');
+    const speakNarrativeBtn = document.getElementById('speakNarrativeBtn');
+    const narrativeSpeechControls = document.getElementById('narrativeSpeechControls');
+    const pauseNarrativeBtn = document.getElementById('pauseNarrativeBtn');
+    const speedNarrativeBtn = document.getElementById('speedNarrativeBtn');
+    const regenerateNarrativeBtn = document.getElementById('regenerateNarrativeBtn');
+    const anomalyWrap = document.getElementById('anomalyWrap');
+    const anomalyChips = document.getElementById('anomalyChips');
+    const exportPngBtn = document.getElementById('exportPngBtn');
+    const exportCsvBtn = document.getElementById('exportCsvBtn');
+    const exportSqlBtn = document.getElementById('exportSqlBtn');
+    const copySqlBtn = document.getElementById('copySqlBtn');
+    const exportNarrativeBtn = document.getElementById('exportNarrativeBtn');
+    const insightBox = document.getElementById('insightBox');
+    const dataStructureBadge = document.getElementById('dataStructureBadge');
+    const chartOptionsRow = document.getElementById('chartOptionsRow');
+    const chartOptionsMeta = document.getElementById('chartOptionsMeta');
+    const authLoginBtn = document.getElementById('authLoginBtn');
+    const authUserGroup = document.getElementById('authUserGroup');
+    const authUserName = document.getElementById('authUserName');
+    const authLogoutBtn = document.getElementById('authLogoutBtn');
+    const authModal = document.getElementById('authModal');
+    const authModalCloseBtn = document.getElementById('authModalCloseBtn');
+    const authTabLogin = document.getElementById('authTabLogin');
+    const authTabRegister = document.getElementById('authTabRegister');
+    const authLoginPane = document.getElementById('authLoginPane');
+    const authRegisterPane = document.getElementById('authRegisterPane');
+    const outputSection = document.getElementById('outputSection');
+    const loginEmail = document.getElementById('loginEmail');
+    const loginPassword = document.getElementById('loginPassword');
+    const loginStatus = document.getElementById('loginStatus');
+    const loginSubmitBtn = document.getElementById('loginSubmitBtn');
+    const registerName = document.getElementById('registerName');
+    const registerEmail = document.getElementById('registerEmail');
+    const registerPassword = document.getElementById('registerPassword');
+    const registerStatus = document.getElementById('registerStatus');
+    const registerSubmitBtn = document.getElementById('registerSubmitBtn');
+  const chatFlowSection = document.getElementById('chatFlowSection');
+  const chatThread = document.getElementById('chatThread');
+  const chatInput = document.getElementById('chatInput');
+  const chatSendBtn = document.getElementById('chatSendBtn');
+  const chatSuggestBtn = document.getElementById('chatSuggestBtn');
+  const chatClearBtn = document.getElementById('chatClearBtn');
+  const chatContextBadge = document.getElementById('chatContextBadge');
+  const chatSuggestBox = document.getElementById('chatSuggestBox');
 
     const sessionId = localStorage.getItem('bi_session_id') || ('session_' + Math.random().toString(36).slice(2, 10));
     localStorage.setItem('bi_session_id', sessionId);
 
+    const DEFAULT_APP_SETTINGS = {
+      saveUploadToDatabase: false,
+      showHistory: true,
+      showValidationTrace: true,
+      compareModeDefault: false,
+      defaultChartType: 'auto',
+      resultRowLimit: 200,
+      followUpSuggestionCount: 6,
+      queryStrictness: 'balanced',
+      errorDetailMode: 'friendly',
+      animationLevel: 'full'
+    };
+
+    function loadAppSettings() {
+      const legacySaveUpload = localStorage.getItem('bi_save_upload_to_database');
+      let parsed = {};
+      try {
+        parsed = JSON.parse(localStorage.getItem('bi_app_settings') || '{}') || {};
+      } catch (_error) {
+        parsed = {};
+      }
+
+      return {
+        ...DEFAULT_APP_SETTINGS,
+        ...parsed,
+        saveUploadToDatabase: parsed.saveUploadToDatabase ?? (legacySaveUpload === 'true')
+      };
+    }
+
     let chart = null;
+    let compareChart = null;
+    let hoverPreviewChart = null;
+    let authToken = null;
+    let currentUser = null;
+    let lastV3Result = null;
+    let chatContext = null;   // { sql, columns, rowCount, sample, fileName }
+    let currentDashboardPayload = null;
+    let currentSchemaColumns = [];
+    let currentPreviewRows = [];
+    let currentNarrativeText = '';
+    let currentNarrativeUtterance = null;
+    let isNarrativeSpeaking = false;
+    let isNarrativePaused = false;
+    let narrativeRestartRequested = false;
+    let narrativeSpeechRate = 0.95;
+    let pipelineTimer = null;
+    let compareModeEnabled = false;
+    let speechRecognitionInstance = null;
+    let isVoiceListening = false;
+    let appSettings = loadAppSettings();
+    const NARRATIVE_SPEECH_RATES = [0.8, 0.95, 1.1, 1.25, 1.4];
 
     // â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
@@ -223,10 +681,42 @@
       return n % 1 === 0 ? n.toLocaleString() : n.toFixed(2);
     }
 
+    function escapeHtml(text) {
+      return String(text ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    async function copyTextToClipboard(text) {
+      const safe = String(text || '');
+      if (!safe) return;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(safe);
+        return;
+      }
+      const area = document.createElement('textarea');
+      area.value = safe;
+      area.style.position = 'fixed';
+      area.style.left = '-9999px';
+      document.body.appendChild(area);
+      area.focus();
+      area.select();
+      document.execCommand('copy');
+      area.remove();
+    }
+
     function triggerAnimate(el, cls = 'animate-in') {
       el.classList.remove(cls);
       void el.offsetWidth;
       el.classList.add(cls);
+    }
+
+    function scrollToOutputWindow() {
+      if (!outputSection) return;
+      outputSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
     async function fetchJson(resource, options) {
@@ -238,29 +728,1083 @@
       return payload;
     }
 
+    function persistAppSettings() {
+      localStorage.setItem('bi_app_settings', JSON.stringify(appSettings));
+      localStorage.setItem('bi_save_upload_to_database', appSettings.saveUploadToDatabase ? 'true' : 'false');
+    }
+
+    function syncSettingsControls() {
+      saveUploadToggle.checked = !!appSettings.saveUploadToDatabase;
+      saveHistoryToggle.checked = !!appSettings.showHistory;
+      showValidationTraceToggle.checked = !!appSettings.showValidationTrace;
+      compareModeDefaultToggle.checked = !!appSettings.compareModeDefault;
+      defaultChartSelect.value = appSettings.defaultChartType || 'auto';
+      resultRowLimitSelect.value = String(appSettings.resultRowLimit || DEFAULT_APP_SETTINGS.resultRowLimit);
+      followUpCountSelect.value = String(appSettings.followUpSuggestionCount || DEFAULT_APP_SETTINGS.followUpSuggestionCount);
+      queryStrictnessSelect.value = appSettings.queryStrictness || 'balanced';
+      errorDetailSelect.value = appSettings.errorDetailMode || 'friendly';
+      animationLevelSelect.value = appSettings.animationLevel || 'full';
+    }
+
+    function readSettingsControls() {
+      return {
+        ...appSettings,
+        saveUploadToDatabase: !!saveUploadToggle.checked,
+        showHistory: !!saveHistoryToggle.checked,
+        showValidationTrace: !!showValidationTraceToggle.checked,
+        compareModeDefault: !!compareModeDefaultToggle.checked,
+        defaultChartType: defaultChartSelect.value || 'auto',
+        resultRowLimit: parseInt(resultRowLimitSelect.value, 10) || DEFAULT_APP_SETTINGS.resultRowLimit,
+        followUpSuggestionCount: parseInt(followUpCountSelect.value, 10) || DEFAULT_APP_SETTINGS.followUpSuggestionCount,
+        queryStrictness: queryStrictnessSelect.value || 'balanced',
+        errorDetailMode: errorDetailSelect.value || 'friendly',
+        animationLevel: animationLevelSelect.value || 'full'
+      };
+    }
+
+    function applyPreferredChartSetting(payload) {
+      const normalized = ensureVisualPayload(payload || null);
+      if (!normalized) return normalized;
+      const preferredChart = appSettings.defaultChartType || 'auto';
+      if (preferredChart === 'auto') return normalized;
+      const compatibleCharts = getCompatibleCharts(normalized);
+      if (!compatibleCharts.includes(preferredChart)) return normalized;
+      return {
+        ...normalized,
+        chart_type: preferredChart,
+        recommended_chart: preferredChart
+      };
+    }
+
+    function applySettingsEffects() {
+      const historyCard = historyBox ? historyBox.closest('.card') : null;
+      const validationCard = validationBox ? validationBox.closest('.card') : null;
+
+      if (historyCard) historyCard.classList.toggle('hidden', !appSettings.showHistory);
+      if (validationCard) validationCard.classList.toggle('hidden', !appSettings.showValidationTrace);
+      pipelineMiniTrace.classList.toggle('hidden', !appSettings.showValidationTrace);
+      document.body.classList.toggle('reduced-motion', appSettings.animationLevel === 'reduced');
+
+      if (!appSettings.showHistory) {
+        historyBox.innerHTML = '<div class="history-empty">History is hidden by settings.</div>';
+      }
+
+      setCompareMode(appSettings.compareModeDefault);
+    }
+
     function setStatus(message) {
       statusText.textContent = message;
     }
 
-    // â”€â”€â”€ Tab Switching â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    function downloadTextFile(fileName, content, mimeType = 'text/plain;charset=utf-8') {
+      const blob = new Blob([content], { type: mimeType });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    }
 
-    function switchTab(tab) {
-      if (tab === 'chart') {
-        tabChart.classList.remove('hidden');
-        tabPreview.classList.add('hidden');
-        tabBtnChart.classList.add('active');
-        tabBtnPreview.classList.remove('active');
+    function updatePipelineProgress(percent, stage, traceText) {
+      const clamped = Math.max(0, Math.min(100, Math.round(percent)));
+      pipelineProgress.classList.add('active');
+      pipelineBarFill.style.width = clamped + '%';
+      pipelinePercentText.textContent = clamped + '%';
+      if (stage) pipelineStageText.textContent = stage;
+      if (traceText && appSettings.showValidationTrace) pipelineMiniTrace.textContent = traceText;
+    }
+
+    function startPipelineProgress() {
+      if (pipelineTimer) clearInterval(pipelineTimer);
+      const stages = [
+        { p: 8, s: 'Reading dataset context', t: 'Schema and input checks in progress.' },
+        { p: 24, s: 'Extracting query intent', t: 'Understanding business question.' },
+        { p: 42, s: 'Generating SQL with AI', t: 'Drafting SQL candidate.' },
+        { p: 63, s: 'Rechecking generated SQL', t: 'Safety and compatibility checks.' },
+        { p: 80, s: 'Executing validated SQL', t: 'Running query on current dataset.' },
+        { p: 92, s: 'Preparing chart response', t: 'Computing chart data and insight text.' }
+      ];
+      let idx = 0;
+      updatePipelineProgress(2, 'Starting pipeline', 'Initializing request...');
+      pipelineTimer = setInterval(() => {
+        if (idx >= stages.length) return;
+        const cur = stages[idx++];
+        updatePipelineProgress(cur.p, cur.s, cur.t);
+      }, 620);
+    }
+
+    function completePipelineProgress(payload) {
+      if (pipelineTimer) {
+        clearInterval(pipelineTimer);
+        pipelineTimer = null;
+      }
+
+      if (payload && Array.isArray(payload.validation_trace) && payload.validation_trace.length) {
+        const last = payload.validation_trace[payload.validation_trace.length - 1];
+        const traceSummary = payload.validation_trace
+          .slice(0, 4)
+          .map(step => (step.stage || 'step') + ':' + (step.status || 'ok'))
+          .join(' | ');
+        updatePipelineProgress(
+          100,
+          (last && last.status === 'error') ? 'Pipeline finished with warning' : 'Pipeline complete',
+          traceSummary || 'Pipeline trace captured.'
+        );
       } else {
-        tabChart.classList.add('hidden');
-        tabPreview.classList.remove('hidden');
-        tabBtnChart.classList.remove('active');
-        tabBtnPreview.classList.add('active');
-        loadPreview();
+        updatePipelineProgress(100, 'Pipeline complete', 'Request finished successfully.');
       }
     }
 
-    tabBtnChart.addEventListener('click', () => switchTab('chart'));
-    tabBtnPreview.addEventListener('click', () => switchTab('preview'));
+    function failPipelineProgress(message) {
+      if (pipelineTimer) {
+        clearInterval(pipelineTimer);
+        pipelineTimer = null;
+      }
+      pipelineProgress.classList.add('active', 'error');
+      updatePipelineProgress(100, 'Pipeline stopped', message || 'Request failed.');
+    }
+
+    function resetPipelineProgressVisual() {
+      pipelineProgress.classList.remove('error');
+    }
+
+    function escapeRegExp(str) {
+      return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    function inferColumnNature(typeName) {
+      const t = String(typeName || '').toLowerCase();
+      if (/int|float|double|dec|num|real|money/.test(t)) return 'numeric';
+      if (/date|time|year/.test(t)) return 'time';
+      return 'text';
+    }
+
+    function renderDatasetProfile() {
+      if (!currentSchemaColumns.length) {
+        datasetProfileBadge.textContent = '-';
+        datasetProfileBadge.classList.add('muted');
+        datasetProfileBox.textContent = 'Select a dataset to profile columns and sample quality.';
+        return;
+      }
+
+      const numeric = currentSchemaColumns.filter(c => inferColumnNature(c.type) === 'numeric').length;
+      const temporal = currentSchemaColumns.filter(c => inferColumnNature(c.type) === 'time').length;
+      const categorical = Math.max(0, currentSchemaColumns.length - numeric - temporal);
+
+      const sampleRows = currentPreviewRows.length;
+      const totalCells = Math.max(1, sampleRows * currentSchemaColumns.length);
+      let nullCells = 0;
+      currentPreviewRows.forEach(row => {
+        currentSchemaColumns.forEach(col => {
+          const val = row[col.name];
+          if (val === null || val === undefined || String(val).trim() === '') nullCells += 1;
+        });
+      });
+      const nullRatio = Math.round((nullCells / totalCells) * 100);
+
+      datasetProfileBadge.textContent = currentSchemaColumns.length + ' cols';
+      datasetProfileBadge.classList.remove('muted');
+      datasetProfileBox.textContent = [
+        'columns: ' + currentSchemaColumns.length,
+        'numeric: ' + numeric,
+        'temporal: ' + temporal,
+        'categorical: ' + categorical,
+        'sample rows scanned: ' + sampleRows,
+        'sample null ratio: ' + nullRatio + '%',
+        '',
+        'top columns:',
+        currentSchemaColumns.slice(0, 8).map(col => '- ' + col.name + ' (' + col.type + ')').join('\n')
+      ].join('\n');
+    }
+
+    function buildNarrative(payload) {
+      if (!payload || !Array.isArray(payload.result_rows)) {
+        return 'Run a query to generate an executive narrative report.';
+      }
+
+      const rows = payload.result_rows || [];
+      const columns = payload.result_columns || [];
+      const chartName = (payload.chart_type || payload.recommended_chart || 'table').replace(/_/g, ' ');
+      const question = questionInput.value.trim() || 'Current business question';
+      const topRow = rows[0] || {};
+      const keyFacts = columns.slice(0, 3).map(col => col + ': ' + (topRow[col] == null ? '-' : topRow[col])).join(' | ');
+      const insight = payload.insight || 'No additional AI insight available for this response.';
+
+      return [
+        'Question: ' + question,
+        'Summary: Returned ' + rows.length + ' row' + (rows.length === 1 ? '' : 's') + ' using a ' + chartName + ' view.',
+        'Top Snapshot: ' + (keyFacts || 'No preview facts available.'),
+        'Interpretation: ' + insight,
+        'Action: Review this pattern and create one follow-up query to validate the trend by time, region, or segment.'
+      ].join('\n\n');
+    }
+
+    function renderNarrative(payload) {
+      currentNarrativeText = buildNarrative(payload);
+      narrativeBox.textContent = currentNarrativeText;
+      triggerAnimate(narrativeBox, 'animate-in');
+    }
+
+    function median(values) {
+      if (!values.length) return 0;
+      const sorted = [...values].sort((a, b) => a - b);
+      const mid = Math.floor(sorted.length / 2);
+      return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+    }
+
+    async function executeAnomalyAction(question) {
+      if (!question) return;
+      if (chatFlowSection && !chatFlowSection.classList.contains('hidden') && chatContext) {
+        chatInput.value = question;
+        await sendChatFollowUp();
+      } else {
+        questionInput.value = question;
+        await generateDashboard();
+      }
+    }
+
+    function renderAnomalyHighlights(payload) {
+      anomalyChips.innerHTML = '';
+      anomalyWrap.classList.add('hidden');
+      if (!payload || !payload.chart_data || !Array.isArray(payload.chart_data.values)) return;
+
+      const values = payload.chart_data.values
+        .map(v => Number(v))
+        .filter(v => Number.isFinite(v));
+      const labels = Array.isArray(payload.chart_data.labels) ? payload.chart_data.labels : [];
+      if (values.length < 2 || labels.length !== values.length) return;
+
+      const maxVal = Math.max(...values);
+      const minVal = Math.min(...values);
+      const maxIdx = values.indexOf(maxVal);
+      const minIdx = values.indexOf(minVal);
+      const med = median(values);
+      const spikes = values
+        .map((v, i) => ({ v, i, label: labels[i] }))
+        .filter(x => med > 0 && x.v >= med * 1.5)
+        .slice(0, 2);
+
+      const actions = [];
+      if (maxIdx >= 0) {
+        actions.push({
+          text: 'Peak at ' + labels[maxIdx] + ' (' + formatNumber(maxVal) + ')',
+          ask: 'Why is ' + labels[maxIdx] + ' the highest in this result?'
+        });
+      }
+      if (minIdx >= 0) {
+        actions.push({
+          text: 'Low point at ' + labels[minIdx] + ' (' + formatNumber(minVal) + ')',
+          ask: 'Why is ' + labels[minIdx] + ' the lowest in this result?'
+        });
+      }
+      spikes.forEach(item => {
+        actions.push({
+          text: 'Spike around ' + item.label,
+          ask: 'Break down ' + item.label + ' by sub-categories to explain the spike.'
+        });
+      });
+
+      if (!actions.length) return;
+      actions.slice(0, 4).forEach(action => {
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'anomaly-chip';
+        chip.textContent = action.text;
+        chip.addEventListener('click', async () => {
+          await executeAnomalyAction(action.ask);
+        });
+        anomalyChips.appendChild(chip);
+      });
+
+      anomalyWrap.classList.remove('hidden');
+    }
+
+    function setCurrentDashboardPayload(payload) {
+      const normalized = applyPreferredChartSetting(payload || null);
+      currentDashboardPayload = normalized;
+      renderNarrative(normalized || null);
+      renderAnomalyHighlights(normalized || null);
+    }
+
+    function chartTypeToJsType(chartType) {
+      const map = {
+        bar_chart: 'bar',
+        horizontal_bar_chart: 'bar',
+        line_chart: 'line',
+        area_chart: 'line',
+        step_line_chart: 'line',
+        pie_chart: 'pie',
+        donut_chart: 'doughnut',
+        radar_chart: 'radar',
+        polar_area_chart: 'polarArea',
+        scatter_plot: 'scatter',
+        bubble_chart: 'bubble',
+        lollipop_chart: 'bar'
+      };
+      return map[chartType] || 'bar';
+    }
+
+    function getRadialScaleOptions(includePointLabels = false) {
+      return {
+        r: {
+          beginAtZero: true,
+          angleLines: { color: 'rgba(148,163,184,0.18)' },
+          grid: { color: 'rgba(148,163,184,0.18)' },
+          pointLabels: includePointLabels
+            ? {
+                color: '#94A3B8',
+                font: { family: 'Space Grotesk, sans-serif', size: 10, weight: '500' },
+                padding: 4
+              }
+            : { display: false },
+          ticks: {
+            display: false,
+            backdropColor: 'transparent',
+            color: '#94A3B8'
+          }
+        }
+      };
+    }
+
+    function isNumericLike(value) {
+      if (value === null || value === undefined || value === '') return false;
+      const n = toNumberOrNaN(value);
+      return Number.isFinite(n);
+    }
+
+    function toNumberOrNaN(value) {
+      if (typeof value === 'number') return value;
+      const raw = String(value == null ? '' : value).trim();
+      if (!raw) return NaN;
+
+      const isParenNegative = /^\(.*\)$/.test(raw);
+      const compact = raw
+        .replace(/[()]/g, '')
+        .replace(/[$€£₹,%]/g, '')
+        .replace(/,/g, '')
+        .replace(/\s+/g, '')
+        .toLowerCase();
+
+      const suffix = compact.endsWith('k') ? 'k'
+        : compact.endsWith('m') ? 'm'
+        : compact.endsWith('b') ? 'b'
+        : '';
+      const baseText = suffix ? compact.slice(0, -1) : compact;
+      let n = Number(baseText);
+
+      if (Number.isFinite(n)) {
+        if (suffix === 'k') n *= 1e3;
+        if (suffix === 'm') n *= 1e6;
+        if (suffix === 'b') n *= 1e9;
+        if (isParenNegative) n *= -1;
+        return n;
+      }
+
+      const fallback = Number(baseText.replace(/[^0-9.-]/g, ''));
+      if (!Number.isFinite(fallback)) return NaN;
+      return isParenNegative ? -fallback : fallback;
+    }
+
+    function buildChartDataFromRows(rows, columns) {
+      const safeRows = Array.isArray(rows) ? rows : [];
+      const safeColumns = Array.isArray(columns) ? columns : [];
+      if (!safeRows.length || !safeColumns.length) return null;
+
+      const numericCols = safeColumns.filter(column => safeRows.some(row => isNumericLike(row[column])));
+      if (!numericCols.length) return null;
+
+      const valueField = numericCols[0];
+      const labelField = safeColumns.find(column => column !== valueField) || valueField;
+      const labels = safeRows.map((row, index) => {
+        const raw = row[labelField];
+        if (raw === null || raw === undefined || raw === '') return 'Item ' + (index + 1);
+        return String(raw);
+      });
+      const values = safeRows.map(row => {
+        const n = toNumberOrNaN(row[valueField]);
+        return Number.isFinite(n) ? n : 0;
+      });
+
+      return {
+        labels,
+        values,
+        label_field: labelField,
+        value_field: valueField,
+        multi_series: false
+      };
+    }
+
+    function ensureVisualPayload(payload) {
+      if (!payload || typeof payload !== 'object') return payload;
+      const normalized = { ...payload };
+      const chosenChart = normalized.chart_type || normalized.recommended_chart || 'table';
+      normalized.chart_type = chosenChart;
+      if (!normalized.recommended_chart) normalized.recommended_chart = chosenChart;
+
+      const hasUsableChartData = normalized.chart_data && Array.isArray(normalized.chart_data.labels) && normalized.chart_data.labels.length;
+      if (!hasUsableChartData) {
+        const built = buildChartDataFromRows(normalized.result_rows, normalized.result_columns);
+        if (built) normalized.chart_data = built;
+      }
+      return normalized;
+    }
+
+    function getWhatIfSettings() {
+      return {
+        scale: 1,
+        shift: 0
+      };
+    }
+
+    function applyWhatIfValue(raw, settings) {
+      const n = toNumberOrNaN(raw);
+      if (!Number.isFinite(n)) return raw;
+      return (n * settings.scale) + settings.shift;
+    }
+
+    function destroyCompareChart() {
+      if (compareChart) {
+        compareChart.destroy();
+        compareChart = null;
+      }
+    }
+
+    function updateCompareSelector(payload) {
+      const normalizedPayload = ensureVisualPayload(payload);
+      const options = getCompatibleCharts(normalizedPayload);
+      const previousValue = compareChartSelect.value;
+      compareChartSelect.innerHTML = '';
+      options
+        .filter(type => type !== 'table' && type !== 'ranked_table')
+        .forEach(type => {
+          const opt = document.createElement('option');
+          opt.value = type;
+          opt.textContent = (V3_CHART_LABELS[type] || type.replace(/_/g, ' ')).replace(/&#[^;]+;\s*/g, '');
+          compareChartSelect.appendChild(opt);
+        });
+
+      if (previousValue && Array.from(compareChartSelect.options).some(opt => opt.value === previousValue)) {
+        compareChartSelect.value = previousValue;
+      } else if (compareChartSelect.options.length) {
+        const fallback = options.find(type => type !== (normalizedPayload.chart_type || normalizedPayload.recommended_chart) && type !== 'table' && type !== 'ranked_table');
+        compareChartSelect.value = fallback || compareChartSelect.options[0].value;
+      }
+    }
+
+    function renderCompareChart(payload) {
+      const normalizedPayload = ensureVisualPayload(payload);
+      if (!compareModeEnabled || !normalizedPayload || !normalizedPayload.chart_data) {
+        chartCard.classList.remove('compare-active');
+        compareWrap.classList.remove('compare-visible');
+        compareWrap.classList.add('hidden');
+        destroyCompareChart();
+        return;
+      }
+
+      updateCompareSelector(normalizedPayload);
+      const compareType = compareChartSelect.value;
+      if (!compareType) {
+        chartCard.classList.remove('compare-active');
+        compareWrap.classList.remove('compare-visible');
+        compareWrap.classList.add('hidden');
+        destroyCompareChart();
+        return;
+      }
+
+      const chartJsType = chartTypeToJsType(compareType);
+      const isRadar = chartJsType === 'radar';
+      const isPolar = chartJsType === 'polarArea';
+      const labels = Array.isArray(normalizedPayload.chart_data.labels) ? normalizedPayload.chart_data.labels : [];
+      const settings = getWhatIfSettings();
+      const values = (normalizedPayload.chart_data.values || []).map(v => applyWhatIfValue(v, settings));
+      if (!labels.length || !values.length) {
+        chartCard.classList.remove('compare-active');
+        compareWrap.classList.remove('compare-visible');
+        compareWrap.classList.add('hidden');
+        destroyCompareChart();
+        return;
+      }
+
+      const data = {
+        labels,
+        datasets: [{
+          label: 'Compare',
+          data: values,
+          backgroundColor: chartJsType === 'pie' || chartJsType === 'doughnut' || chartJsType === 'polarArea'
+            ? PALETTE_ALPHA.slice(0, labels.length)
+            : (isRadar ? 'rgba(79,70,229,0.18)' : 'rgba(79,70,229,0.65)'),
+          borderColor: chartJsType === 'pie' || chartJsType === 'doughnut' || chartJsType === 'polarArea' ? '#fff' : '#818cf8',
+          borderWidth: 2,
+          fill: compareType === 'area_chart' || isRadar,
+          tension: 0.35,
+          stepped: compareType === 'step_line_chart',
+          pointRadius: chartJsType === 'line' || chartJsType === 'radar' ? 4 : 0,
+          pointHoverRadius: chartJsType === 'line' || chartJsType === 'radar' ? 6 : 0,
+          pointBackgroundColor: '#818cf8',
+          pointBorderColor: '#ffffff',
+          pointBorderWidth: 1.5,
+          borderRadius: chartJsType === 'bar' ? 8 : 0,
+          borderSkipped: false
+        }]
+      };
+
+      const options = {
+        responsive: true,
+        maintainAspectRatio: false,
+        indexAxis: compareType === 'horizontal_bar_chart' ? 'y' : 'x',
+        animation: { duration: 780, easing: 'easeOutCubic' },
+        plugins: {
+          legend: {
+            display: false,
+            labels: {
+              color: '#94A3B8',
+              font: { family: 'Space Grotesk, sans-serif', size: 11 }
+            }
+          },
+          tooltip: {
+            backgroundColor: 'rgba(15,23,42,0.96)',
+            titleColor: '#F8FAFC',
+            bodyColor: '#E2E8F0',
+            borderColor: 'rgba(79,70,229,0.35)',
+            borderWidth: 1,
+            callbacks: {
+              label(ctx) {
+                const raw = ctx.parsed.y ?? ctx.parsed;
+                return ' ' + formatNumber(typeof raw === 'object' ? raw.y ?? raw : raw);
+              }
+            }
+          }
+        },
+        scales: (chartJsType === 'pie' || chartJsType === 'doughnut')
+          ? {}
+          : ((isRadar || isPolar)
+            ? getRadialScaleOptions(isRadar)
+            : {
+                x: { ticks: { color: '#94A3B8', maxRotation: 35 }, grid: { color: 'rgba(148,163,184,0.15)' } },
+                y: { ticks: { color: '#94A3B8', callback: v => formatNumber(v) }, grid: { color: 'rgba(148,163,184,0.15)' } }
+              })
+      };
+
+      chartCard.classList.add('compare-active');
+      compareWrap.classList.remove('hidden');
+      requestAnimationFrame(() => compareWrap.classList.add('compare-visible'));
+      if (compareChart) {
+        compareChart.config.type = chartJsType;
+        compareChart.data = data;
+        compareChart.options = options;
+        compareChart.update();
+      } else {
+        compareChart = new Chart(compareCanvas.getContext('2d'), { type: chartJsType, data, options });
+      }
+    }
+
+    function setCompareMode(enabled) {
+      compareModeEnabled = !!enabled;
+      compareToggleBtn.classList.toggle('active', compareModeEnabled);
+      compareToggleBtn.textContent = compareModeEnabled ? 'Compare On' : 'Compare Mode';
+      if (currentDashboardPayload) {
+        renderCompareChart(currentDashboardPayload);
+      } else if (!compareModeEnabled) {
+        chartCard.classList.remove('compare-active');
+        compareWrap.classList.remove('compare-visible');
+        compareWrap.classList.add('hidden');
+      }
+    }
+
+    function initVoiceFeatures() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        voiceAskBtn.disabled = true;
+        voiceAskBtn.textContent = 'Voice N/A';
+        return;
+      }
+
+      speechRecognitionInstance = new SpeechRecognition();
+      speechRecognitionInstance.lang = 'en-US';
+      speechRecognitionInstance.interimResults = true;
+      speechRecognitionInstance.continuous = false;
+
+      speechRecognitionInstance.onstart = () => {
+        isVoiceListening = true;
+        voiceAskBtn.classList.add('active');
+        voiceAskBtn.textContent = 'Listening...';
+        setStatus('Voice input is listening...');
+      };
+      speechRecognitionInstance.onresult = event => {
+        const text = Array.from(event.results).map(r => r[0].transcript).join(' ').trim();
+        if (text) questionInput.value = text;
+      };
+      speechRecognitionInstance.onerror = () => {
+        setStatus('Voice input error. Try again.');
+      };
+      speechRecognitionInstance.onend = () => {
+        isVoiceListening = false;
+        voiceAskBtn.classList.remove('active');
+        voiceAskBtn.textContent = 'Voice Ask';
+      };
+    }
+
+    function toggleVoiceAsk() {
+      if (!speechRecognitionInstance) return;
+      if (isVoiceListening) {
+        speechRecognitionInstance.stop();
+      } else {
+        speechRecognitionInstance.start();
+      }
+    }
+
+    function speakNarrative() {
+      if (!('speechSynthesis' in window)) {
+        setStatus('Speech synthesis is not supported in this browser.');
+        return;
+      }
+      if (isNarrativeSpeaking) {
+        stopNarrativeSpeech();
+        return;
+      }
+      startNarrativeSpeech();
+    }
+
+    function updateNarrativeSpeedButton() {
+      speedNarrativeBtn.textContent = 'Speed ' + narrativeSpeechRate.toFixed(2).replace(/\.00$/, '') + 'x';
+    }
+
+    function updateNarrativeSpeechUi() {
+      narrativeSpeechControls.classList.toggle('hidden', !isNarrativeSpeaking);
+      speakNarrativeBtn.textContent = isNarrativeSpeaking ? 'Stop' : 'Speak';
+      pauseNarrativeBtn.textContent = isNarrativePaused ? 'Resume' : 'Pause';
+      pauseNarrativeBtn.disabled = !isNarrativeSpeaking;
+      updateNarrativeSpeedButton();
+    }
+
+    function startNarrativeSpeech() {
+      const text = currentNarrativeText || narrativeBox.textContent || '';
+      if (!text.trim()) {
+        setStatus('No narrative available to speak yet.');
+        return;
+      }
+
+      narrativeRestartRequested = false;
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = narrativeSpeechRate;
+      utterance.pitch = 1;
+      utterance.onstart = () => {
+        isNarrativeSpeaking = true;
+        isNarrativePaused = false;
+        updateNarrativeSpeechUi();
+      };
+      utterance.onend = () => {
+        if (narrativeRestartRequested) {
+          narrativeRestartRequested = false;
+          startNarrativeSpeech();
+          return;
+        }
+        currentNarrativeUtterance = null;
+        isNarrativeSpeaking = false;
+        isNarrativePaused = false;
+        updateNarrativeSpeechUi();
+      };
+      utterance.onerror = () => {
+        currentNarrativeUtterance = null;
+        isNarrativeSpeaking = false;
+        isNarrativePaused = false;
+        narrativeRestartRequested = false;
+        updateNarrativeSpeechUi();
+        setStatus('Narration could not be played.');
+      };
+      currentNarrativeUtterance = utterance;
+      window.speechSynthesis.speak(utterance);
+    }
+
+    function stopNarrativeSpeech() {
+      narrativeRestartRequested = false;
+      currentNarrativeUtterance = null;
+      isNarrativeSpeaking = false;
+      isNarrativePaused = false;
+      window.speechSynthesis.cancel();
+      updateNarrativeSpeechUi();
+    }
+
+    function toggleNarrativePause() {
+      if (!isNarrativeSpeaking) return;
+      if (window.speechSynthesis.paused || isNarrativePaused) {
+        window.speechSynthesis.resume();
+        isNarrativePaused = false;
+      } else {
+        window.speechSynthesis.pause();
+        isNarrativePaused = true;
+      }
+      updateNarrativeSpeechUi();
+    }
+
+    function cycleNarrativeSpeed() {
+      const idx = NARRATIVE_SPEECH_RATES.indexOf(narrativeSpeechRate);
+      const nextIdx = idx === -1 ? 0 : (idx + 1) % NARRATIVE_SPEECH_RATES.length;
+      narrativeSpeechRate = NARRATIVE_SPEECH_RATES[nextIdx];
+      updateNarrativeSpeedButton();
+
+      if (isNarrativeSpeaking && currentNarrativeUtterance) {
+        narrativeRestartRequested = true;
+        window.speechSynthesis.cancel();
+        setStatus('Narration speed changed to ' + narrativeSpeechRate.toFixed(2).replace(/\.00$/, '') + 'x.');
+      }
+    }
+
+    async function copySqlText() {
+      const sqlText = (currentDashboardPayload && currentDashboardPayload.sql_query)
+        ? currentDashboardPayload.sql_query
+        : sqlBox.textContent;
+      if (!String(sqlText || '').trim()) {
+        setStatus('No SQL available to copy.');
+        return;
+      }
+      try {
+        await copyTextToClipboard(sqlText);
+        setStatus('SQL copied to clipboard.');
+      } catch (_error) {
+        setStatus('Failed to copy SQL.');
+      }
+    }
+
+    function initMergedVisualEffects() {
+      // Startup overlay — mirrors index2's exact approach
+      const overlay = document.getElementById('startup-overlay');
+      if (overlay) {
+        setTimeout(() => {
+          overlay.style.opacity = '0';
+          setTimeout(() => overlay.remove(), 800);
+        }, 1000);
+      }
+
+      // Scroll-reveal on panels and cards
+      const revealTargets = document.querySelectorAll('.brand-hero, .panel, .card');
+      revealTargets.forEach(el => el.classList.add('reveal-on-scroll'));
+
+      const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-visible');
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.07 });
+
+      revealTargets.forEach(el => observer.observe(el));
+    }
+
+    function exportChartPng() {
+      if (!chart || !chart.toBase64Image) {
+        setStatus('No chart available to export yet.');
+        return;
+      }
+      const link = document.createElement('a');
+      link.href = chart.toBase64Image('image/png', 1);
+      link.download = 'chart-export.png';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setStatus('Chart PNG exported.');
+    }
+
+    function exportRowsCsv() {
+      if (!currentDashboardPayload || !Array.isArray(currentDashboardPayload.result_rows)) {
+        setStatus('No query result available to export.');
+        return;
+      }
+      const cols = currentDashboardPayload.result_columns || [];
+      const rows = currentDashboardPayload.result_rows || [];
+      const esc = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+      const csv = [
+        cols.map(esc).join(','),
+        ...rows.map(row => cols.map(col => esc(row[col])).join(','))
+      ].join('\n');
+      downloadTextFile('query-result.csv', csv, 'text/csv;charset=utf-8');
+      setStatus('CSV exported.');
+    }
+
+    function exportSqlText() {
+      if (!currentDashboardPayload || !currentDashboardPayload.sql_query) {
+        setStatus('No SQL available to export.');
+        return;
+      }
+      const content = [
+        '-- Generated SQL',
+        currentDashboardPayload.sql_query,
+        '',
+        '-- Explanation',
+        currentDashboardPayload.sql_explanation || 'No explanation available.'
+      ].join('\n');
+      downloadTextFile('generated-query.sql', content, 'text/sql;charset=utf-8');
+      setStatus('SQL exported.');
+    }
+
+    function exportNarrativeText() {
+      if (!currentNarrativeText) {
+        setStatus('No narrative available to export yet.');
+        return;
+      }
+      downloadTextFile('narrative-report.txt', currentNarrativeText);
+      setStatus('Narrative report exported.');
+    }
+
+    function formatValidationDetails(payload) {
+      const lines = [];
+      const status = payload.validation_status || 'executed';
+      lines.push('status: ' + status);
+
+      if (!appSettings.showValidationTrace) {
+        lines.push('');
+        lines.push('pipeline trace hidden in settings');
+        return lines.join('\n');
+      }
+
+      if (Array.isArray(payload.validation_trace) && payload.validation_trace.length) {
+        lines.push('');
+        lines.push('pipeline trace:');
+        payload.validation_trace.forEach((step, index) => {
+          const mark = step.status === 'error' ? 'x' : '✓';
+          lines.push((index + 1) + '. [' + mark + '] ' + (step.stage || 'step') + ' - ' + (step.message || 'done'));
+        });
+      }
+
+      if (payload.validation_error) {
+        lines.push('');
+        lines.push('error: ' + payload.validation_error);
+      }
+
+      return lines.join('\n');
+    }
+
+    function pickRandom(list) {
+      return list[Math.floor(Math.random() * list.length)];
+    }
+
+    function getHoverPreviewEl() {
+      let el = document.getElementById('chatHoverPreview');
+      if (el) return el;
+
+      el = document.createElement('div');
+      el.id = 'chatHoverPreview';
+      el.className = 'hover-chart-preview';
+      el.innerHTML =
+        '<div class="hover-chart-preview-title" id="chatHoverPreviewTitle"></div>' +
+        '<div class="hover-chart-preview-canvas-wrap" id="chatHoverPreviewCanvasWrap">' +
+        '<canvas id="chatHoverPreviewCanvas" width="220" height="130"></canvas>' +
+        '</div>';
+      document.body.appendChild(el);
+      return el;
+    }
+
+    function destroyHoverPreviewChart() {
+      if (hoverPreviewChart) {
+        hoverPreviewChart.destroy();
+        hoverPreviewChart = null;
+      }
+    }
+
+    function positionHoverPreview(event) {
+      const preview = getHoverPreviewEl();
+      const pad = 16;
+      const x = event.clientX + 18;
+      const y = event.clientY + 18;
+      const maxX = window.innerWidth - preview.offsetWidth - pad;
+      const maxY = window.innerHeight - preview.offsetHeight - pad;
+      preview.style.left = Math.max(pad, Math.min(x, maxX)) + 'px';
+      preview.style.top = Math.max(pad, Math.min(y, maxY)) + 'px';
+    }
+
+    function buildHoverPreviewConfig(resultPayload, chartType) {
+      const rows = Array.isArray(resultPayload.result_rows) ? resultPayload.result_rows : [];
+      const columns = Array.isArray(resultPayload.result_columns) ? resultPayload.result_columns : [];
+      const numericCols = columns.filter(column => rows.some(row => typeof row[column] === 'number'));
+      const d = resultPayload.chart_data;
+
+      if (!d || !Array.isArray(d.labels) || !d.labels.length) return null;
+      if (chartType === 'table' || chartType === 'ranked_table') return null;
+
+      const map = {
+        bar_chart: 'bar',
+        horizontal_bar_chart: 'bar',
+        line_chart: 'line',
+        area_chart: 'line',
+        step_line_chart: 'line',
+        pie_chart: 'pie',
+        donut_chart: 'doughnut',
+        radar_chart: 'radar',
+        polar_area_chart: 'polarArea',
+        scatter_plot: 'scatter',
+        bubble_chart: 'bubble',
+        lollipop_chart: 'bar'
+      };
+
+      const chartJsType = map[chartType] || 'bar';
+      const isHorizontal = chartType === 'horizontal_bar_chart';
+      const isScatter = chartType === 'scatter_plot';
+      const isBubble = chartType === 'bubble_chart';
+      const isPieFamily = chartJsType === 'pie' || chartJsType === 'doughnut' || chartJsType === 'polarArea';
+
+      let data;
+      if (isScatter && numericCols.length >= 2) {
+        data = {
+          datasets: [{
+            data: rows.slice(0, 50).map(row => ({
+              x: Number(row[numericCols[0]]) || 0,
+              y: Number(row[numericCols[1]]) || 0
+            })),
+            backgroundColor: 'rgba(196,69,54,0.7)',
+            borderColor: '#c44536',
+            pointRadius: 3
+          }]
+        };
+      } else if (isBubble && numericCols.length >= 2) {
+        const radiusCol = numericCols[2] || numericCols[1];
+        data = {
+          datasets: [{
+            data: rows.slice(0, 40).map(row => ({
+              x: Number(row[numericCols[0]]) || 0,
+              y: Number(row[numericCols[1]]) || 0,
+              r: Math.max(3, Math.min(12, (Number(row[radiusCol]) || 0) / 12 || 6))
+            })),
+            backgroundColor: 'rgba(229,142,38,0.6)',
+            borderColor: '#e58e26',
+            borderWidth: 1
+          }]
+        };
+      } else {
+        data = {
+          labels: d.labels.slice(0, 12),
+          datasets: [{
+            data: (d.values || []).slice(0, 12),
+            backgroundColor: isPieFamily
+              ? ['rgba(196,69,54,0.74)', 'rgba(229,142,38,0.74)', 'rgba(74,144,217,0.74)', 'rgba(120,184,75,0.74)', 'rgba(156,90,176,0.74)', 'rgba(224,110,56,0.74)', 'rgba(59,163,179,0.74)', 'rgba(212,160,53,0.74)']
+              : 'rgba(196,69,54,0.72)',
+            borderColor: isPieFamily ? '#fff6ea' : '#c44536',
+            borderWidth: isPieFamily ? 2 : 1.5,
+            fill: chartType === 'area_chart',
+            tension: 0.35,
+            stepped: chartType === 'step_line_chart',
+            pointRadius: chartJsType === 'line' ? 2.2 : 0,
+            borderRadius: chartJsType === 'bar' ? 6 : 0,
+            barThickness: chartType === 'lollipop_chart' ? 8 : undefined
+          }]
+        };
+      }
+
+      return {
+        type: chartJsType,
+        data,
+        options: {
+          responsive: false,
+          animation: {
+            duration: 320,
+            easing: 'easeOutCubic'
+          },
+          maintainAspectRatio: false,
+          indexAxis: isHorizontal ? 'y' : 'x',
+          plugins: {
+            legend: { display: false },
+            tooltip: { enabled: false }
+          },
+          scales: (isPieFamily || chartJsType === 'radar') ? {} : {
+            x: {
+              type: (isScatter || isBubble) ? 'linear' : 'category',
+              ticks: { display: false },
+              grid: { display: false },
+              border: { display: false }
+            },
+            y: {
+              ticks: { display: false },
+              grid: { display: false },
+              border: { display: false }
+            }
+          }
+        }
+      };
+    }
+
+    function showHoverChartPreview(event, resultPayload, chartTypeRaw) {
+      const preview = getHoverPreviewEl();
+      const titleEl = document.getElementById('chatHoverPreviewTitle');
+      const canvasWrap = document.getElementById('chatHoverPreviewCanvasWrap');
+      const canvas = document.getElementById('chatHoverPreviewCanvas');
+      if (!titleEl || !canvasWrap || !canvas) return;
+
+      const chartType = chartTypeRaw || resultPayload.recommended_chart || resultPayload.chart_type || 'table';
+      titleEl.textContent = chartType.replace(/_/g, ' ');
+
+      destroyHoverPreviewChart();
+      const config = buildHoverPreviewConfig(resultPayload, chartType);
+
+      if (!config) {
+        canvasWrap.classList.add('empty');
+        canvasWrap.textContent = 'No chart preview for this view';
+      } else {
+        canvasWrap.classList.remove('empty');
+        canvasWrap.innerHTML = '<canvas id="chatHoverPreviewCanvas" width="220" height="130"></canvas>';
+        const freshCanvas = document.getElementById('chatHoverPreviewCanvas');
+        hoverPreviewChart = new Chart(freshCanvas.getContext('2d'), config);
+      }
+
+      positionHoverPreview(event);
+      preview.classList.add('visible');
+    }
+
+    function hideHoverChartPreview() {
+      const preview = document.getElementById('chatHoverPreview');
+      if (!preview) return;
+      preview.classList.remove('visible');
+      destroyHoverPreviewChart();
+    }
+
+    function attachChartPillPreview(chartPill, resultPayload, chartType) {
+      chartPill.classList.add('chat-result-pill-chart');
+      chartPill.removeAttribute('title');
+      chartPill.addEventListener('mouseenter', event => {
+        showHoverChartPreview(event, resultPayload, chartType);
+      });
+      chartPill.addEventListener('mousemove', event => {
+        positionHoverPreview(event);
+      });
+      chartPill.addEventListener('mouseleave', () => {
+        hideHoverChartPreview();
+      });
+    }
+
+    function toCalmMessage(error, context = 'general') {
+      if (appSettings.errorDetailMode === 'technical') {
+        return error && error.message ? error.message : 'Unexpected request failure.';
+      }
+
+      const raw = (error && error.message ? String(error.message) : '').toLowerCase();
+
+      if (context === 'query') {
+        if (raw.includes('relational schema is not present') || raw.includes('selected csv file was not found')) {
+          return pickRandom([
+            'Our data detective could not find that schema. Please verify the selected table and try again.',
+            'Looks like that dataset map is missing. Please verify the table selection and retry.'
+          ]);
+        }
+        if (raw.includes('validate that query safely') || raw.includes('failed to execute generated sql') || raw.includes('only select queries are allowed')) {
+          return pickRandom([
+            'That question was a bit tricky. Try a simpler one like "Show total revenue by region."',
+            'The SQL wizard needs a clearer clue. Try rephrasing your question in one short sentence.'
+          ]);
+        }
+        if (raw.includes('ai service is temporarily busy') || raw.includes('quota') || raw.includes('resource_exhausted')) {
+          return pickRandom([
+            'AI is taking a quick coffee break. Please try again in a moment.',
+            'The AI lane is busy right now. Give it a few seconds and try again.'
+          ]);
+        }
+        return 'We could not generate SQL for that question yet. Please try rephrasing and try again.';
+      }
+
+      return error && error.message ? error.message : 'Something unexpected happened. Please try again.';
+    }
 
     async function loadPreview() {
       const fileName = fileSelect.value;
@@ -271,6 +1815,7 @@
       tbody.innerHTML = '<tr><td style="color:var(--soft);padding:12px">Loading preview...</td></tr>';
       try {
         const payload = await fetchJson('/api/preview?file=' + encodeURIComponent(fileName));
+        currentPreviewRows = Array.isArray(payload.rows) ? payload.rows : [];
         thead.innerHTML = '';
         tbody.innerHTML = '';
         const headRow = document.createElement('tr');
@@ -292,7 +1837,10 @@
           });
           tbody.appendChild(tr);
         });
+        renderDatasetProfile();
       } catch (err) {
+        currentPreviewRows = [];
+        renderDatasetProfile();
         thead.innerHTML = '';
         tbody.innerHTML = '<tr><td style="color:var(--accent);padding:12px">Error: ' + err.message + '</td></tr>';
       }
@@ -303,8 +1851,11 @@
     function openSettings() {
       settingsModal.classList.remove('hidden');
       apiKeyInput.value = '';
+      syncSettingsControls();
+      adminDemoModeToggle.checked = false;
       fetchJson('/api/settings').then(s => {
-        keyStatus.textContent = s.configured ? 'Current key: ' + s.masked : 'No key configured â€” using demo fallback.';
+        adminDemoModeToggle.checked = !!s.demoMode;
+        keyStatus.textContent = s.configured ? 'Current key: ' + s.masked : 'No key configured - using demo fallback.';
         keyStatus.className = 'key-status' + (s.configured ? ' ok' : '');
       }).catch(() => {});
     }
@@ -318,38 +1869,568 @@
     modalCancelBtn.addEventListener('click', closeSettings);
     settingsModal.addEventListener('click', e => { if (e.target === settingsModal) closeSettings(); });
 
-    saveKeyBtn.addEventListener('click', async () => {
+    saveSettingsBtn.addEventListener('click', async () => {
+      appSettings = readSettingsControls();
+      persistAppSettings();
+      applySettingsEffects();
+
       const key = apiKeyInput.value.trim();
-      if (!key) {
-        keyStatus.textContent = 'Please paste an API key first.';
-        keyStatus.className = 'key-status bad';
-        return;
-      }
-      saveKeyBtn.disabled = true;
+      const adminPayload = { demoMode: !!adminDemoModeToggle.checked };
+      if (key) adminPayload.apiKey = key;
+
+      saveSettingsBtn.disabled = true;
       try {
         const result = await fetchJson('/api/settings', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ apiKey: key })
+          body: JSON.stringify(adminPayload)
         });
-        keyStatus.textContent = 'Saved! Active key: ' + result.masked;
+        keyStatus.textContent = result.configured ? ('Saved. Active key: ' + result.masked) : 'Saved. Demo fallback is active.';
         keyStatus.className = 'key-status ok';
         apiKeyInput.value = '';
+        if (currentDashboardPayload) {
+          const preferredPayload = applyPreferredChartSetting(currentDashboardPayload);
+          currentDashboardPayload = preferredPayload;
+          renderChart(preferredPayload);
+          renderTable(preferredPayload.result_columns, preferredPayload.result_rows);
+          displayChartOptions(preferredPayload);
+        }
+        if (appSettings.showHistory) {
+          await loadHistory();
+        }
         setTimeout(closeSettings, 1600);
       } catch (err) {
         keyStatus.textContent = err.message;
         keyStatus.className = 'key-status bad';
       } finally {
-        saveKeyBtn.disabled = false;
+        saveSettingsBtn.disabled = false;
       }
     });
 
-    // â”€â”€â”€ Data Loading â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ─── Auth ─────────────────────────────────────────────────────────────────────
 
-    async function loadFiles() {
+    function restoreAuthState() {
+      const savedToken = localStorage.getItem('bi_jwt_token');
+      const savedUser = localStorage.getItem('bi_user');
+      if (savedToken && savedUser) {
+        try {
+          authToken = savedToken;
+          currentUser = JSON.parse(savedUser);
+          updateAuthUI();
+        } catch (_) {
+          localStorage.removeItem('bi_jwt_token');
+          localStorage.removeItem('bi_user');
+        }
+      }
+    }
+
+    function updateAuthUI() {
+      if (authToken && currentUser) {
+        authLoginBtn.classList.add('hidden');
+        authUserGroup.classList.remove('hidden');
+        authUserName.textContent = 'Hi, ' + (currentUser.name || currentUser.email || 'User');
+        if (insightBox.textContent.startsWith('Sign in')) {
+          insightBox.textContent = 'Run a query to see AI-generated insights.';
+        }
+      } else {
+        authLoginBtn.classList.remove('hidden');
+        authUserGroup.classList.add('hidden');
+        insightBox.textContent = 'Sign in and run a query to see AI-generated insights.';
+        insightBox.classList.remove('has-insight');
+      }
+    }
+
+    function openAuthModal() {
+      authModal.classList.remove('hidden');
+      switchAuthTab('login');
+      loginEmail.value = '';
+      loginPassword.value = '';
+      loginStatus.innerHTML = '&nbsp;';
+      loginStatus.className = 'key-status';
+    }
+
+    function closeAuthModal() {
+      authModal.classList.add('hidden');
+    }
+
+    function switchAuthTab(tab) {
+      if (tab === 'login') {
+        authLoginPane.classList.remove('hidden');
+        authRegisterPane.classList.add('hidden');
+        authTabLogin.classList.add('active');
+        authTabRegister.classList.remove('active');
+      } else {
+        authLoginPane.classList.add('hidden');
+        authRegisterPane.classList.remove('hidden');
+        authTabLogin.classList.remove('active');
+        authTabRegister.classList.add('active');
+        registerName.value = '';
+        registerEmail.value = '';
+        registerPassword.value = '';
+        registerStatus.innerHTML = '&nbsp;';
+        registerStatus.className = 'key-status';
+      }
+    }
+
+    async function doLogin() {
+      const email = loginEmail.value.trim();
+      const password = loginPassword.value;
+      if (!email || !password) {
+        loginStatus.textContent = 'Please enter both email and password.';
+        loginStatus.className = 'key-status bad';
+        return;
+      }
+      loginSubmitBtn.disabled = true;
+      loginStatus.textContent = 'Signing in…';
+      loginStatus.className = 'key-status';
+      try {
+        const result = await fetchJson('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        authToken = result.token;
+        currentUser = result.user;
+        localStorage.setItem('bi_jwt_token', authToken);
+        localStorage.setItem('bi_user', JSON.stringify(currentUser));
+        updateAuthUI();
+        closeAuthModal();
+      } catch (err) {
+        loginStatus.textContent = err.message || 'Login failed. Check your credentials.';
+        loginStatus.className = 'key-status bad';
+      } finally {
+        loginSubmitBtn.disabled = false;
+      }
+    }
+
+    async function doRegister() {
+      const name = registerName.value.trim();
+      const email = registerEmail.value.trim();
+      const password = registerPassword.value;
+      if (!name || !email || !password) {
+        registerStatus.textContent = 'Please fill in all fields.';
+        registerStatus.className = 'key-status bad';
+        return;
+      }
+      if (password.length < 8) {
+        registerStatus.textContent = 'Password must be at least 8 characters.';
+        registerStatus.className = 'key-status bad';
+        return;
+      }
+      registerSubmitBtn.disabled = true;
+      registerStatus.textContent = 'Creating account…';
+      registerStatus.className = 'key-status';
+      try {
+        const result = await fetchJson('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, password })
+        });
+        authToken = result.token;
+        currentUser = result.user;
+        localStorage.setItem('bi_jwt_token', authToken);
+        localStorage.setItem('bi_user', JSON.stringify(currentUser));
+        updateAuthUI();
+        closeAuthModal();
+      } catch (err) {
+        registerStatus.textContent = err.message || 'Registration failed. Try a different email.';
+        registerStatus.className = 'key-status bad';
+      } finally {
+        registerSubmitBtn.disabled = false;
+      }
+    }
+
+    function doLogout() {
+      authToken = null;
+      currentUser = null;
+      lastV3Result = null;
+      localStorage.removeItem('bi_jwt_token');
+      localStorage.removeItem('bi_user');
+      chartOptionsRow.innerHTML = '';
+      chartOptionsRow.classList.add('hidden');
+      chartOptionsMeta.classList.add('hidden');
+      dataStructureBadge.classList.add('hidden');
+      updateAuthUI();
+    }
+
+    // ─── V3 Display ────────────────────────────────────────────────────────────────
+
+    const V3_CHART_LABELS = {
+      bar_chart: '&#9646; Bar',
+      horizontal_bar_chart: '&#8803; H-Bar',
+      line_chart: '&#9135; Line',
+      area_chart: '&#9154; Area',
+      step_line_chart: '&#9135; Step',
+      pie_chart: '&#9685; Pie',
+      donut_chart: '&#9900; Donut',
+      radar_chart: '&#9673; Radar',
+      polar_area_chart: '&#9681; Polar',
+      scatter_plot: '&#8901; Scatter',
+      lollipop_chart: '&#9675; Lollipop',
+      ranked_table: '&#9776; Ranked',
+      bubble_chart: '&#9679; Bubble',
+      table: '&#8801; Table'
+    };
+
+    function getCompatibleCharts(payload) {
+      const normalizedPayload = ensureVisualPayload(payload);
+      if (!normalizedPayload) return [];
+      const serverList = Array.isArray(normalizedPayload.all_chart_options) && normalizedPayload.all_chart_options.length
+        ? normalizedPayload.all_chart_options
+        : (Array.isArray(normalizedPayload.chart_options) ? normalizedPayload.chart_options : []);
+
+      const compatible = [...serverList];
+      const rows = Array.isArray(normalizedPayload.result_rows) ? normalizedPayload.result_rows : [];
+      const columns = Array.isArray(normalizedPayload.result_columns) ? normalizedPayload.result_columns : [];
+      const numericCols = columns.filter(column => rows.some(row => isNumericLike(row[column])));
+      const textCols = columns.filter(column => !numericCols.includes(column));
+      const labelCount = normalizedPayload.chart_data && Array.isArray(normalizedPayload.chart_data.labels) ? normalizedPayload.chart_data.labels.length : 0;
+
+      if (!compatible.includes('table')) compatible.push('table');
+      if (normalizedPayload.chart_data && labelCount > 0) {
+        ['bar_chart', 'horizontal_bar_chart', 'line_chart', 'area_chart', 'step_line_chart'].forEach(type => {
+          if (!compatible.includes(type)) compatible.push(type);
+        });
+        if (labelCount <= 12) {
+          ['pie_chart', 'donut_chart', 'radar_chart', 'polar_area_chart', 'lollipop_chart'].forEach(type => {
+            if (!compatible.includes(type)) compatible.push(type);
+          });
+        }
+      }
+      if (numericCols.length >= 2) {
+        ['scatter_plot', 'bubble_chart'].forEach(type => {
+          if (!compatible.includes(type)) compatible.push(type);
+        });
+      }
+      if (textCols.length > 0 && numericCols.length > 0 && !compatible.includes('ranked_table')) {
+        compatible.push('ranked_table');
+      }
+
+      return compatible;
+    }
+
+    function displayInsight(payload) {
+      if (payload && payload.insight) {
+        insightBox.textContent = payload.insight;
+        insightBox.classList.add('has-insight');
+        insightBox.classList.remove('insight-text');
+      }
+      if (payload && payload.data_structure && payload.data_structure.type) {
+        dataStructureBadge.textContent = payload.data_structure.type.replace(/_/g, ' ');
+        dataStructureBadge.classList.remove('hidden', 'muted');
+      }
+    }
+
+    function displayChartOptions(payload) {
+      const normalizedPayload = applyPreferredChartSetting(payload);
+      chartOptionsRow.innerHTML = '';
+      const compatibleCharts = getCompatibleCharts(normalizedPayload);
+      if (!normalizedPayload || !compatibleCharts.length) {
+        chartOptionsRow.classList.add('hidden');
+        chartOptionsMeta.classList.add('hidden');
+        return;
+      }
+      lastV3Result = normalizedPayload;
+      chartOptionsRow.classList.remove('hidden');
+      chartOptionsMeta.textContent = compatibleCharts.length + ' compatible chart/table views for this result';
+      chartOptionsMeta.classList.remove('hidden');
+      updateCompareSelector(normalizedPayload);
+      compatibleCharts.forEach(option => {
+        const pill = document.createElement('button');
+        pill.type = 'button';
+        const isActive = option === (normalizedPayload.chart_type || normalizedPayload.recommended_chart);
+        pill.className = 'chart-option-pill' + (isActive ? ' active' : '');
+        pill.innerHTML = V3_CHART_LABELS[option] || option.replace(/_/g, ' ');
+        pill.addEventListener('click', () => {
+          if (!lastV3Result) return;
+          document.querySelectorAll('.chart-option-pill').forEach(p => p.classList.remove('active'));
+          pill.classList.add('active');
+          const selectedPayload = ensureVisualPayload({
+            ...lastV3Result,
+            chart_type: option,
+            recommended_chart: option
+          });
+          setCurrentDashboardPayload(selectedPayload);
+          lastV3Result = selectedPayload;
+          renderChart(selectedPayload);
+        });
+        chartOptionsRow.appendChild(pill);
+      });
+    }
+
+    // ─── Chat Flow ────────────────────────────────────────────────────────────────
+
+    function openChatFlow(result) {
+      if (!result || !result.sql_query) return;
+      chatContext = {
+        sql: result.sql_query,
+        columns: result.result_columns || [],
+        rowCount: (result.result_rows || []).length,
+        sample: (result.result_rows || []).slice(0, 3),
+        fileName: result.file_name || fileSelect.value
+      };
+      chatFlowSection.classList.remove('hidden');
+      chatContextBadge.textContent = chatContext.rowCount + ' result' + (chatContext.rowCount !== 1 ? 's' : '') + ' in context';
+      chatThread.innerHTML = '';
+      // seed thread with the original query as a user bubble
+      addChatBubble('user', questionInput.value.trim() || 'Initial query');
+      const rootSummary = (result.result_rows || []).length + ' rows · ' + (result.chart_type || 'table') + (result.insight ? ' · ' + result.insight : '');
+      addChatBubble('ai', rootSummary, result, true);
+      chatThread.scrollTop = chatThread.scrollHeight;
+      loadFollowUpSuggestions();
+    }
+
+    function resetChatFlow() {
+      chatContext = null;
+      chatFlowSection.classList.add('hidden');
+      chatThread.innerHTML = '';
+      chatSuggestBox.innerHTML = '';
+      chatSuggestBox.classList.add('hidden');
+    }
+
+    function renderFollowUpSuggestions(queries) {
+      chatSuggestBox.innerHTML = '';
+      if (!Array.isArray(queries) || !queries.length) {
+        chatSuggestBox.classList.add('hidden');
+        return;
+      }
+
+      const title = document.createElement('div');
+      title.className = 'chat-suggest-title';
+      title.textContent = 'Suggested follow-up demo queries';
+      chatSuggestBox.appendChild(title);
+
+      const chipsWrap = document.createElement('div');
+      chipsWrap.className = 'chat-suggest-chips';
+      queries.forEach((item, index) => {
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'chat-suggest-chip';
+        const q = (item && item.question ? item.question : '').trim();
+        if (!q) return;
+        const chartLabel = (item.chart_type || 'table').replace(/_/g, ' ');
+        chip.innerHTML = '<span class="chat-suggest-index">S' + (index + 1) + '</span>' +
+          '<span class="chat-suggest-text">' + q + '</span>' +
+          '<span class="chat-suggest-chart">' + chartLabel + '</span>';
+        chip.addEventListener('click', async () => {
+          chatInput.value = q;
+          await sendChatFollowUp();
+        });
+        chipsWrap.appendChild(chip);
+      });
+      chatSuggestBox.appendChild(chipsWrap);
+      chatSuggestBox.classList.remove('hidden');
+    }
+
+    async function loadFollowUpSuggestions() {
+      if (!chatContext || !chatContext.fileName) {
+        renderFollowUpSuggestions([]);
+        return;
+      }
+
+      chatSuggestBtn.disabled = true;
+      try {
+        const endpoint = authToken ? '/api/v3/follow-up-demo-queries' : '/api/follow-up-demo-queries';
+        const reqHeaders = { 'Content-Type': 'application/json' };
+        if (authToken) reqHeaders['Authorization'] = 'Bearer ' + authToken;
+
+        const payload = await fetchJson(endpoint, {
+          method: 'POST',
+          headers: reqHeaders,
+          body: JSON.stringify({
+            fileName: chatContext.fileName,
+            count: appSettings.followUpSuggestionCount,
+            parentContext: {
+              sql: chatContext.sql,
+              columns: chatContext.columns,
+              rowCount: chatContext.rowCount,
+              sample: chatContext.sample
+            }
+          })
+        });
+
+        renderFollowUpSuggestions(payload.queries || []);
+      } catch (_error) {
+        renderFollowUpSuggestions([]);
+      } finally {
+        chatSuggestBtn.disabled = false;
+      }
+    }
+
+    function addChatBubble(role, text, resultPayload = null) {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'chat-bubble chat-bubble-' + (role === 'user' ? 'user' : 'ai');
+
+      const msg = document.createElement('div');
+      msg.className = 'chat-msg' + (text === '...' ? ' thinking' : '');
+      msg.textContent = text;
+      wrapper.appendChild(msg);
+
+      if (role === 'ai' && resultPayload) {
+        const bar = document.createElement('div');
+        bar.className = 'chat-result-bar';
+
+        const rowPill = document.createElement('span');
+        rowPill.className = 'chat-result-pill';
+        rowPill.textContent = (resultPayload.result_rows || []).length + ' rows';
+        bar.appendChild(rowPill);
+
+        const chartPill = document.createElement('span');
+        chartPill.className = 'chat-result-pill';
+        const resultChartType = (resultPayload.recommended_chart || resultPayload.chart_type || 'table');
+        chartPill.textContent = resultChartType.replace(/_/g, ' ');
+        attachChartPillPreview(chartPill, resultPayload, resultChartType);
+        bar.appendChild(chartPill);
+
+        const loadBtn = document.createElement('button');
+        loadBtn.className = 'chat-load-btn';
+        loadBtn.textContent = 'Load this result';
+        loadBtn.addEventListener('click', () => {
+          setCurrentDashboardPayload(resultPayload);
+          renderChart(resultPayload);
+          renderTable(resultPayload.result_columns, resultPayload.result_rows);
+          displayInsight(resultPayload);
+          displayChartOptions(resultPayload);
+          sqlBox.textContent = resultPayload.sql_query;
+          explanationBox.textContent = resultPayload.sql_explanation || 'No explanation available.';
+          modeBox.textContent = resultPayload.mode || 'local';
+          // update context to the loaded result
+          chatContext = {
+            sql: resultPayload.sql_query,
+            columns: resultPayload.result_columns || [],
+            rowCount: (resultPayload.result_rows || []).length,
+            sample: (resultPayload.result_rows || []).slice(0, 3),
+            fileName: resultPayload.file_name || fileSelect.value
+          };
+          chatContextBadge.textContent = chatContext.rowCount + ' result' + (chatContext.rowCount !== 1 ? 's' : '') + ' in context';
+        });
+        bar.appendChild(loadBtn);
+
+        wrapper.appendChild(bar);
+      }
+
+      chatThread.appendChild(wrapper);
+      return msg; // return msg so caller can update it (thinking → real text)
+    }
+
+    async function sendChatFollowUp() {
+      const question = chatInput.value.trim();
+      if (!question) return;
+      if (!chatContext) {
+        chatInput.value = '';
+        return;
+      }
+      chatInput.value = '';
+      chatSendBtn.disabled = true;
+
+      addChatBubble('user', question);
+
+      // waiting placeholder
+      const thinkingMsg = addChatBubble('ai', '...');
+      chatThread.scrollTop = chatThread.scrollHeight;
+
+      try {
+        const endpoint = authToken ? '/api/v3/follow-up' : '/api/follow-up';
+        const reqHeaders = { 'Content-Type': 'application/json' };
+        if (authToken) reqHeaders['Authorization'] = 'Bearer ' + authToken;
+        const body = {
+          fileName: chatContext.fileName,
+          question,
+          sessionId,
+          parentContext: {
+            sql: chatContext.sql,
+            columns: chatContext.columns,
+            rowCount: chatContext.rowCount,
+            sample: chatContext.sample
+          }
+        };
+        const result = await fetchJson(endpoint, {
+          method: 'POST',
+          headers: reqHeaders,
+          body: JSON.stringify(body)
+        });
+
+        // replace thinking bubble with insight summary
+        const summary = (result.result_rows || []).length + ' rows · ' + (result.recommended_chart || result.chart_type || 'table').replace(/_/g, ' ') + (result.insight ? ' · ' + result.insight : '');
+        thinkingMsg.classList.remove('thinking');
+        thinkingMsg.textContent = summary;
+
+        // add result bar with load button to the same wrapper
+        const bar = document.createElement('div');
+        bar.className = 'chat-result-bar';
+        const rowPill = document.createElement('span');
+        rowPill.className = 'chat-result-pill';
+        rowPill.textContent = (result.result_rows || []).length + ' rows';
+        bar.appendChild(rowPill);
+        const chartPill = document.createElement('span');
+        chartPill.className = 'chat-result-pill';
+        const resultChartType = (result.recommended_chart || result.chart_type || 'table');
+        chartPill.textContent = resultChartType.replace(/_/g, ' ');
+        attachChartPillPreview(chartPill, result, resultChartType);
+        bar.appendChild(chartPill);
+        const loadBtn = document.createElement('button');
+        loadBtn.className = 'chat-load-btn';
+        loadBtn.textContent = 'Load this result';
+        loadBtn.addEventListener('click', () => {
+          setCurrentDashboardPayload(result);
+          renderChart(result);
+          renderTable(result.result_columns, result.result_rows);
+          displayInsight(result);
+          displayChartOptions(result);
+          sqlBox.textContent = result.sql_query;
+          explanationBox.textContent = result.sql_explanation || 'No explanation available.';
+          modeBox.textContent = result.mode || 'local';
+          chatContext = {
+            sql: result.sql_query,
+            columns: result.result_columns || [],
+            rowCount: (result.result_rows || []).length,
+            sample: (result.result_rows || []).slice(0, 3),
+            fileName: result.file_name || fileSelect.value
+          };
+          chatContextBadge.textContent = chatContext.rowCount + ' result' + (chatContext.rowCount !== 1 ? 's' : '') + ' in context';
+        });
+        bar.appendChild(loadBtn);
+        thinkingMsg.parentElement.appendChild(bar);
+
+        // auto-load into dashboard
+        setCurrentDashboardPayload(result);
+        renderChart(result);
+        renderTable(result.result_columns, result.result_rows);
+        displayInsight(result);
+        displayChartOptions(result);
+        sqlBox.textContent = result.sql_query;
+        explanationBox.textContent = result.sql_explanation || 'No explanation available.';
+        modeBox.textContent = result.mode || 'local';
+
+        // update context for next follow-up
+        chatContext = {
+          sql: result.sql_query,
+          columns: result.result_columns || [],
+          rowCount: (result.result_rows || []).length,
+          sample: (result.result_rows || []).slice(0, 3),
+          fileName: result.file_name || fileSelect.value
+        };
+        chatContextBadge.textContent = chatContext.rowCount + ' result' + (chatContext.rowCount !== 1 ? 's' : '') + ' in context';
+        loadFollowUpSuggestions();
+
+      } catch (error) {
+        thinkingMsg.classList.remove('thinking');
+        thinkingMsg.classList.add('error');
+        thinkingMsg.textContent = toCalmMessage(error, 'query');
+      } finally {
+        chatSendBtn.disabled = false;
+        chatInput.focus();
+        chatThread.scrollTop = chatThread.scrollHeight;
+      }
+    }
+
+    // ─── Data Loading ─────────────────────────────────────────────────────────────
+
+    async function loadFiles(preferredFileName = '') {
       setStatus('Loading datasets...');
       try {
         const payload = await fetchJson('/api/files');
+        const previousSelection = preferredFileName || fileSelect.value;
         fileSelect.innerHTML = '';
 
         if (!payload.files.length) {
@@ -370,7 +2451,15 @@
           fileSelect.appendChild(option);
         });
 
+        if (payload.files.length) {
+          const nextSelection = payload.files.includes(previousSelection)
+            ? previousSelection
+            : payload.files[0];
+          fileSelect.value = nextSelection;
+        }
+
         await loadSchema();
+        await loadPreview();
         setStatus('Datasets loaded.');
       } catch (error) {
         setStatus(error.message);
@@ -383,44 +2472,77 @@
       setStatus('Reading schema...');
       try {
         const payload = await fetchJson('/api/schema?file=' + encodeURIComponent(fileName));
+        currentSchemaColumns = Array.isArray(payload.columns) ? payload.columns : [];
         tableNameBadge.textContent = payload.table_name;
         schemaBox.textContent = payload.columns.map(column => column.name + ' (' + column.type + ')').join('\n');
-        demoQueriesBox.textContent = 'Click “Refresh” to load AI-suggested queries.';
+        renderDatasetProfile();
+        demoQueriesBox.textContent = 'Click "Generate Demo Queries" to load AI-suggested queries.';
         setStatus('Schema ready.');
       } catch (error) {
+        currentSchemaColumns = [];
+        renderDatasetProfile();
         setStatus(error.message);
       }
     }
 
-    let allDemoQueries = [];
     let activeFilter = 'all';
+    let demoQueryCount = 8;
 
     const CHART_ICONS = {
       bar_chart:  '&#9646; Bar',
+      horizontal_bar_chart: '&#8803; H-Bar',
       line_chart: '&#9135; Line',
+      area_chart: '&#9154; Area',
+      step_line_chart: '&#9135; Step',
       pie_chart:  '&#9685; Pie',
+      donut_chart: '&#9900; Donut',
+      scatter_plot: '&#8901; Scatter',
+      radar_chart: '&#9673; Radar',
+      polar_area_chart: '&#9681; Polar',
+      bubble_chart: '&#9679; Bubble',
+      lollipop_chart: '&#9675; Lollipop',
+      ranked_table: '&#9776; Ranked',
       table:      '&#8801; Table'
     };
+
+    function formatChartLabel(chartType) {
+      return CHART_ICONS[chartType] || chartType.replace(/_/g, ' ');
+    }
+
+    function updateDemoConfigSummary() {
+      const filterLabel = activeFilter === 'all' ? 'all chart types' : formatChartLabel(activeFilter).replace(/&#[^;]+;\s*/g, '').trim();
+      demoConfigSummary.textContent = 'Current setup: ' + demoQueryCount + ' queries • ' + filterLabel + '.';
+    }
+
+    async function openDemoQueryModal() {
+      if (!fileSelect.value) {
+        await loadFiles();
+      }
+      if (!fileSelect.value) {
+        demoQueriesBox.textContent = 'Select a dataset first.';
+        return;
+      }
+      demoCountSelect.value = String(demoQueryCount);
+      document.querySelectorAll('#demoFilterBar .demo-filter-pill').forEach(p => p.classList.toggle('active', p.dataset.filter === activeFilter));
+      demoQueryModal.classList.remove('hidden');
+    }
+
+    function closeDemoQueryModal() {
+      demoQueryModal.classList.add('hidden');
+    }
 
     document.getElementById('demoFilterBar').addEventListener('click', e => {
       const pill = e.target.closest('.demo-filter-pill');
       if (!pill) return;
       activeFilter = pill.dataset.filter;
       document.querySelectorAll('.demo-filter-pill').forEach(p => p.classList.toggle('active', p === pill));
-      applyDemoFilter();
+      updateDemoConfigSummary();
     });
-
-    function applyDemoFilter() {
-      const filtered = activeFilter === 'all'
-        ? allDemoQueries
-        : allDemoQueries.filter(q => q.chart_type === activeFilter);
-      paintDemoQueries(filtered);
-    }
 
     function paintDemoQueries(queries) {
       demoQueriesBox.innerHTML = '';
       if (!queries.length) {
-        demoQueriesBox.textContent = 'No ' + (activeFilter === 'all' ? '' : activeFilter.replace('_', ' ') + ' ') + 'queries available.';
+        demoQueriesBox.textContent = 'No demo queries available for this table.';
         return;
       }
       queries.forEach((item, index) => {
@@ -428,7 +2550,7 @@
         button.className = 'demo-query-item animate-in';
         button.type = 'button';
         button.style.animationDelay = index * 40 + 'ms';
-        const iconHtml = CHART_ICONS[item.chart_type] || item.chart_type;
+        const iconHtml = formatChartLabel(item.chart_type);
         button.innerHTML =
           '<span class="demo-index">Q' + (index + 1) + '</span>' +
           '<span class="demo-question">' + item.question + '</span>' +
@@ -442,42 +2564,50 @@
     }
 
     function renderDemoQueries(queries) {
-      allDemoQueries = queries || [];
-      applyDemoFilter();
+      paintDemoQueries(queries || []);
     }
 
     async function loadDemoQueries() {
-      const fileName = fileSelect.value;
+      let fileName = fileSelect.value;
       if (!fileName) {
-        demoQueriesBox.textContent = 'Select a dataset first.';
-        return;
+        await loadFiles();
+        fileName = fileSelect.value;
+        if (!fileName) {
+          demoQueriesBox.textContent = 'Select a dataset first.';
+          return;
+        }
       }
-      const count = parseInt(document.getElementById('demoCountSelect').value, 10) || 8;
+      const count = demoQueryCount;
+      const chartType = activeFilter === 'all' ? '' : activeFilter;
+      const label = chartType ? formatChartLabel(chartType).replace(/&#[^;]+;\s*/g, '').trim() + ' ' : '';
       demoRefreshButton.disabled = true;
-      demoQueriesBox.innerHTML = '<span style="color:var(--soft)">Generating ' + count + ' AI-suggested queries…</span>';
+      demoApplyBtn.disabled = true;
+      demoQueriesBox.innerHTML = '<span style="color:var(--soft)">Generating ' + count + ' ' + label + 'AI-suggested queries…</span>';
       try {
-        const payload = await fetchJson('/api/demo-queries?file=' + encodeURIComponent(fileName) + '&count=' + count);
+        const payload = await fetchJson('/api/demo-queries?file=' + encodeURIComponent(fileName) + '&count=' + count + (chartType ? '&chart_type=' + encodeURIComponent(chartType) : ''));
         renderDemoQueries(payload.queries);
       } catch (error) {
         demoQueriesBox.textContent = error.message;
       } finally {
         demoRefreshButton.disabled = false;
+        demoApplyBtn.disabled = false;
       }
     }
 
     async function uploadCsv() {
       const file = uploadInput.files[0];
       if (!file) { setStatus('Choose a CSV file first.'); return; }
+      const saveToDatabase = !!appSettings.saveUploadToDatabase;
       uploadButton.disabled = true;
-      setStatus('Uploading CSV...');
+      setStatus(saveToDatabase ? 'Uploading CSV and saving to database...' : 'Uploading CSV for temporary use...');
       try {
         const formData = new FormData();
         formData.append('file', file);
-        await fetchJson('/api/upload', { method: 'POST', body: formData });
-        await loadFiles();
-        fileSelect.value = file.name;
-        await loadSchema();
-        setStatus('CSV uploaded and loaded.');
+        formData.append('saveToDatabase', saveToDatabase ? 'true' : 'false');
+        const uploadPayload = await fetchJson('/api/upload', { method: 'POST', body: formData });
+        const uploadedName = uploadPayload.file_name || file.name;
+        await loadFiles(uploadedName);
+        setStatus(uploadPayload.temporary ? 'CSV uploaded temporarily and loaded.' : 'CSV saved to database and loaded.');
       } catch (error) {
         setStatus(error.message);
       } finally {
@@ -493,6 +2623,8 @@
       thead.innerHTML = '';
       tbody.innerHTML = '';
       if (!columns || !columns.length) { resultMeta.textContent = '0 rows'; return; }
+      const safeRows = Array.isArray(rows) ? rows : [];
+      const visibleRows = safeRows.slice(0, appSettings.resultRowLimit);
 
       const headRow = document.createElement('tr');
       columns.forEach(column => {
@@ -502,7 +2634,7 @@
       });
       thead.appendChild(headRow);
 
-      rows.slice(0, 200).forEach((row, i) => {
+      visibleRows.forEach((row, i) => {
         const tr = document.createElement('tr');
         tr.classList.add('row-in');
         tr.style.animationDelay = Math.min(i * 30, 500) + 'ms';
@@ -514,7 +2646,7 @@
         });
         tbody.appendChild(tr);
       });
-      resultMeta.textContent = rows.length + ' rows';
+      resultMeta.textContent = safeRows.length + ' rows' + (safeRows.length > visibleRows.length ? ' · showing ' + visibleRows.length : '');
     }
 
     // â”€â”€â”€ Chart Render â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -532,26 +2664,163 @@
       'rgba(156,90,176,0.72)', 'rgba(224,110,56,0.72)', 'rgba(59,163,179,0.72)', 'rgba(212,160,53,0.72)'
     ];
 
-    function renderChart(payload) {
-      destroyChart();
-      chartWrap.classList.remove('loading', 'result-ready');
-      chartCard.classList.remove('result-ready');
+    function getChartAnimationConfig(chartType, chartJsType) {
+      const base = { duration: 920, easing: 'easeOutCubic' };
 
-      const chartType = payload.chart_type;
+      if (chartType === 'bar_chart' || chartType === 'lollipop_chart') {
+        return {
+          animation: base,
+          animations: {
+            y: {
+              from(ctx) {
+                const area = ctx.chart.chartArea;
+                return area ? area.bottom : 0;
+              }
+            }
+          }
+        };
+      }
+
+      if (chartType === 'horizontal_bar_chart') {
+        return {
+          animation: base,
+          animations: {
+            x: {
+              from(ctx) {
+                const area = ctx.chart.chartArea;
+                return area ? area.left : 0;
+              }
+            }
+          }
+        };
+      }
+
+      if (chartType === 'line_chart' || chartType === 'area_chart' || chartType === 'step_line_chart') {
+        return {
+          animation: { duration: 980, easing: 'easeOutQuart' },
+          animations: {
+            y: {
+              from(ctx) {
+                const area = ctx.chart.chartArea;
+                return area ? area.bottom : 0;
+              }
+            }
+          }
+        };
+      }
+
+      if (chartType === 'radar_chart') {
+        return {
+          animation: { duration: 980, easing: 'easeOutQuart' },
+          animations: {
+            x: {
+              from(ctx) {
+                const radial = ctx.chart.scales.r;
+                return radial ? radial.xCenter : 0;
+              }
+            },
+            y: {
+              from(ctx) {
+                const radial = ctx.chart.scales.r;
+                return radial ? radial.yCenter : 0;
+              }
+            }
+          }
+        };
+      }
+
+      if (chartType === 'pie_chart' || chartType === 'donut_chart' || chartType === 'polar_area_chart') {
+        return {
+          animation: { duration: 960, easing: 'easeOutCubic' },
+          animations: {
+            outerRadius: { from: 0 },
+            x: {
+              from(ctx) {
+                const area = ctx.chart.chartArea;
+                return area ? (area.left + area.right) / 2 : 0;
+              }
+            },
+            y: {
+              from(ctx) {
+                const area = ctx.chart.chartArea;
+                return area ? (area.top + area.bottom) / 2 : 0;
+              }
+            }
+          }
+        };
+      }
+
+      if (chartType === 'scatter_plot') {
+        return {
+          animation: { duration: 880, easing: 'easeOutCubic' },
+          animations: {
+            y: {
+              from(ctx) {
+                const area = ctx.chart.chartArea;
+                return area ? area.bottom : 0;
+              }
+            }
+          }
+        };
+      }
+
+      if (chartType === 'bubble_chart') {
+        return {
+          animation: { duration: 900, easing: 'easeOutCubic' },
+          animations: {
+            y: {
+              from(ctx) {
+                const area = ctx.chart.chartArea;
+                return area ? area.bottom : 0;
+              }
+            },
+            radius: { from: 0 }
+          }
+        };
+      }
+
+      return {
+        animation: base,
+        animations: {}
+      };
+    }
+
+    function renderChart(payload) {
+      const normalizedPayload = applyPreferredChartSetting(payload);
+      chartWrap.classList.remove('loading', 'result-ready');
+      chartWrap.classList.remove('viz-pop-in');
+      chartCard.classList.remove('result-ready');
+      chartCard.classList.remove('viz-pop-in');
+      chartCanvas.classList.remove('chart-canvas-pop');
+
+      if (!normalizedPayload) {
+        destroyChart();
+        destroyCompareChart();
+        compareWrap.classList.add('hidden');
+        chartFallback.textContent = 'The relational schema is not present. Please verify and try again.';
+        chartFallback.style.display = 'grid';
+        chartCanvas.style.display = 'none';
+        return;
+      }
+
+      const chartType = normalizedPayload.chart_type || normalizedPayload.recommended_chart || 'table';
       // Animate badge
-      chartTypeBox.textContent = chartType;
+      chartTypeBox.textContent = chartType.replace(/_/g, ' ');
       triggerAnimate(chartTypeBox, 'pop-in');
 
-      const hasChartData = payload.chart_data && payload.chart_data.labels && payload.chart_data.labels.length > 0;
+      const hasChartData = normalizedPayload.chart_data && normalizedPayload.chart_data.labels && normalizedPayload.chart_data.labels.length > 0;
 
       // â”€â”€ Single value: big number display â”€â”€
-      if (!hasChartData && payload.result_rows && payload.result_rows.length === 1) {
-        const cols = Object.keys(payload.result_rows[0]);
-        const numCols = cols.filter(c => typeof payload.result_rows[0][c] === 'number');
+      if (!hasChartData && normalizedPayload.result_rows && normalizedPayload.result_rows.length === 1) {
+        const cols = Object.keys(normalizedPayload.result_rows[0]);
+        const numCols = cols.filter(c => isNumericLike(normalizedPayload.result_rows[0][c]));
         if (numCols.length >= 1) {
+          destroyChart();
+          destroyCompareChart();
+          compareWrap.classList.add('hidden');
           chartCanvas.style.display = 'none';
           if (numCols.length === 1) {
-            const val = payload.result_rows[0][numCols[0]];
+            const val = normalizedPayload.result_rows[0][numCols[0]];
             chartFallback.innerHTML =
               '<div class="single-value-wrap">' +
               '<div class="single-value-num">' + formatNumber(val) + '</div>' +
@@ -562,7 +2831,7 @@
             const items = numCols.map((c, i) => {
               const color = PALETTE[i % PALETTE.length];
               return '<div class="multi-value-item">' +
-                '<div class="single-value-num" style="color:' + color + ';font-size:clamp(1.6rem,3.2vw,2.6rem)">' + formatNumber(payload.result_rows[0][c]) + '</div>' +
+                '<div class="single-value-num" style="color:' + color + ';font-size:clamp(1.6rem,3.2vw,2.6rem)">' + formatNumber(normalizedPayload.result_rows[0][c]) + '</div>' +
                 '<div class="single-value-label">' + c.replace(/_/g, ' ') + '</div>' +
                 '</div>' +
                 (i < numCols.length - 1 ? '<div class="multi-value-divider"></div>' : '');
@@ -572,30 +2841,124 @@
           chartFallback.style.display = 'grid';
           chartWrap.classList.add('result-ready');
           chartCard.classList.add('result-ready');
+          triggerAnimate(chartWrap, 'viz-pop-in');
+          triggerAnimate(chartCard, 'viz-pop-in');
           return;
         }
       }
 
-      if (chartType === 'table' || !hasChartData) {
-        chartFallback.textContent = chartType === 'table' ? 'Table mode â€” see results below.' : 'Not enough numeric data to render chart.';
+      if (chartType === 'table' || chartType === 'ranked_table' || !hasChartData) {
+        destroyChart();
+        destroyCompareChart();
+        compareWrap.classList.add('hidden');
+        chartFallback.textContent = (chartType === 'table' || chartType === 'ranked_table') ? 'Table mode - see results below.' : 'Not enough numeric data to render chart.';
         chartFallback.style.display = 'grid';
         chartCanvas.style.display = 'none';
+        chartWrap.classList.add('result-ready');
+        chartCard.classList.add('result-ready');
+        triggerAnimate(chartWrap, 'viz-pop-in');
+        triggerAnimate(chartCard, 'viz-pop-in');
         return;
       }
 
       chartFallback.style.display = 'none';
       chartCanvas.style.display = 'block';
+      triggerAnimate(chartCanvas, 'chart-canvas-pop');
 
-      const map = { bar_chart: 'bar', line_chart: 'line', pie_chart: 'pie' };
-      const chartJsType = map[chartType] || 'bar';
-      const d = payload.chart_data;
+      const rows = Array.isArray(normalizedPayload.result_rows) ? normalizedPayload.result_rows : [];
+      const columns = Array.isArray(normalizedPayload.result_columns) ? normalizedPayload.result_columns : [];
+      const numericCols = columns.filter(column => rows.some(row => isNumericLike(row[column])));
+      const labelColumn = columns.find(column => !numericCols.includes(column)) || columns[0];
+      const chartJsType = chartTypeToJsType(chartType);
+      const isHorizontal = chartType === 'horizontal_bar_chart';
+      const isPieFamily = chartJsType === 'pie' || chartJsType === 'doughnut' || chartJsType === 'polarArea';
+      const isRadar = chartJsType === 'radar';
+      const isPolar = chartJsType === 'polarArea';
+      const isScatter = chartJsType === 'scatter';
+      const isBubble = chartJsType === 'bubble';
+      const isLollipop = chartType === 'lollipop_chart';
+      const d = normalizedPayload.chart_data;
+      const chartMotion = getChartAnimationConfig(chartType, chartJsType);
+      const simulation = getWhatIfSettings();
+      const whatIfActive = Math.abs(simulation.scale - 1) > 0.0001 || Math.abs(simulation.shift) > 0.0001;
+      const fallbackMetric = d.value_field && columns.includes(d.value_field)
+        ? d.value_field
+        : (numericCols[0] || null);
+      const baseInputValues = Array.isArray(d.values) && d.values.length
+        ? d.values.map(v => toNumberOrNaN(v))
+        : [];
+      const resolvedBaseValues = baseInputValues.some(v => Number.isFinite(v))
+        ? baseInputValues
+        : (fallbackMetric
+          ? rows.map(row => toNumberOrNaN(row[fallbackMetric]))
+          : []);
+      const simValues = resolvedBaseValues.map(v => {
+        const seed = Number.isFinite(v) ? v : 0;
+        return applyWhatIfValue(seed, simulation);
+      });
+      const baseValues = resolvedBaseValues.map(v => (Number.isFinite(v) ? v : 0));
 
       let datasets;
-      if (d.multi_series) {
+      if (isScatter && numericCols.length >= 2) {
+        const scatterBaseData = rows.map(row => ({
+          x: toNumberOrNaN(row[numericCols[0]]),
+          y: toNumberOrNaN(row[numericCols[1]])
+        }));
+        const scatterSimData = rows.map(row => ({
+          x: applyWhatIfValue(toNumberOrNaN(row[numericCols[0]]), simulation),
+          y: applyWhatIfValue(toNumberOrNaN(row[numericCols[1]]), simulation)
+        }));
+        datasets = [{
+          label: whatIfActive ? 'Simulated' : numericCols.slice(0, 2).join(' vs '),
+          data: scatterSimData,
+          backgroundColor: PALETTE_ALPHA[0],
+          borderColor: PALETTE[0],
+          pointRadius: 6,
+          pointHoverRadius: 8
+        }];
+        if (whatIfActive) {
+          datasets.unshift({
+            label: 'Baseline',
+            data: scatterBaseData,
+            backgroundColor: 'rgba(110,120,140,0.35)',
+            borderColor: 'rgba(110,120,140,0.6)',
+            pointRadius: 4,
+            pointHoverRadius: 4
+          });
+        }
+      } else if (isBubble && numericCols.length >= 2) {
+        const radiusCol = numericCols[2] || numericCols[1];
+        const bubbleBaseData = rows.map(row => ({
+          x: toNumberOrNaN(row[numericCols[0]]),
+          y: toNumberOrNaN(row[numericCols[1]]),
+          r: Math.max(5, Math.min(18, (toNumberOrNaN(row[radiusCol]) || 0) / 10 || 8))
+        }));
+        const bubbleSimData = rows.map(row => ({
+          x: applyWhatIfValue(toNumberOrNaN(row[numericCols[0]]), simulation),
+          y: applyWhatIfValue(toNumberOrNaN(row[numericCols[1]]), simulation),
+          r: Math.max(5, Math.min(18, (Number(applyWhatIfValue(toNumberOrNaN(row[radiusCol]), simulation)) || 0) / 10 || 8))
+        }));
+        datasets = [{
+          label: whatIfActive ? 'Simulated' : numericCols.slice(0, 3).join(' / '),
+          data: bubbleSimData,
+          backgroundColor: PALETTE_ALPHA[1],
+          borderColor: PALETTE[1],
+          borderWidth: 2
+        }];
+        if (whatIfActive) {
+          datasets.unshift({
+            label: 'Baseline',
+            data: bubbleBaseData,
+            backgroundColor: 'rgba(110,120,140,0.28)',
+            borderColor: 'rgba(110,120,140,0.55)',
+            borderWidth: 1
+          });
+        }
+      } else if (d.multi_series) {
         // Each label = its own colored bar
         datasets = [{
           label: 'Comparison',
-          data: d.values,
+          data: simValues,
           backgroundColor: d.labels.map((_, i) => PALETTE_ALPHA[i % PALETTE_ALPHA.length]),
           borderColor: d.labels.map((_, i) => PALETTE[i % PALETTE.length]),
           borderWidth: 2,
@@ -603,94 +2966,165 @@
           borderSkipped: false
         }];
       } else {
-        datasets = [{
-          label: d.value_field || 'Value',
-          data: d.values,
-          backgroundColor: chartJsType === 'pie'
+        datasets = [];
+        if (whatIfActive) {
+          datasets.push({
+            label: 'Baseline',
+            data: baseValues,
+            backgroundColor: (isPieFamily || isRadar)
+              ? d.labels.map(() => 'rgba(120,130,150,0.28)')
+              : 'rgba(120,130,150,0.35)',
+            borderColor: isPieFamily ? '#ffffff' : 'rgba(120,130,150,0.75)',
+            borderWidth: isPieFamily ? 2 : 1.5,
+            borderRadius: chartJsType === 'bar' ? 10 : 0,
+            borderSkipped: false,
+            tension: 0.35,
+            fill: false,
+            stepped: chartType === 'step_line_chart',
+            pointRadius: (chartJsType === 'line' || isLollipop || isRadar) ? 4 : 0,
+            pointHoverRadius: (chartJsType === 'line' || isLollipop || isRadar) ? 4 : 0,
+            pointBackgroundColor: 'rgba(120,130,150,0.85)',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 1.5,
+            barThickness: isLollipop ? 10 : undefined
+          });
+        }
+
+        datasets.push({
+          label: whatIfActive ? 'Simulated' : (d.value_field || 'Value'),
+          data: simValues,
+          backgroundColor: isPieFamily
             ? PALETTE_ALPHA.slice(0, d.labels.length)
-            : PALETTE_ALPHA[0],
-          borderColor: chartJsType === 'pie' ? '#ffffff' : PALETTE[0],
-          borderWidth: chartJsType === 'pie' ? 3 : 2,
+            : (isRadar ? 'rgba(79,70,229,0.18)' : PALETTE_ALPHA[0]),
+          borderColor: isPieFamily ? '#ffffff' : PALETTE[0],
+          borderWidth: isPieFamily ? 3 : 2,
           borderRadius: chartJsType === 'bar' ? 10 : 0,
           borderSkipped: false,
           tension: 0.35,
-          fill: chartJsType === 'line' ? { target: 'origin', above: 'rgba(196,69,54,0.08)' } : false,
-          pointRadius: chartJsType === 'line' ? 6 : 0,
-          pointHoverRadius: chartJsType === 'line' ? 9 : 0,
+          fill: chartType === 'area_chart'
+            ? { target: 'origin', above: 'rgba(79,70,229,0.14)' }
+            : isRadar,
+          stepped: chartType === 'step_line_chart',
+          pointRadius: (chartJsType === 'line' || isLollipop || isRadar) ? 6 : 0,
+          pointHoverRadius: (chartJsType === 'line' || isLollipop || isRadar) ? 9 : 0,
           pointBackgroundColor: PALETTE[0],
           pointBorderColor: '#fff',
-          pointBorderWidth: 2
-        }];
+          pointBorderWidth: 2,
+          barThickness: isLollipop ? 10 : undefined
+        });
       }
 
-      chart = new Chart(chartCanvas.getContext('2d'), {
-        type: chartJsType,
-        data: { labels: d.labels, datasets },
-        options: {
+      const chartData = (isScatter || isBubble)
+        ? { datasets }
+        : { labels: d.labels, datasets };
+
+      const chartOptions = {
           responsive: true,
           maintainAspectRatio: false,
-          animation: {
-            duration: 900,
-            easing: 'easeInOutCubic',
-            delay(ctx) {
-              return ctx.type === 'data' && ctx.mode === 'default' ? ctx.dataIndex * 55 : 0;
-            }
-          },
+          indexAxis: isHorizontal ? 'y' : 'x',
+          animation: chartMotion.animation,
+          animations: chartMotion.animations,
           plugins: {
             legend: {
-              display: chartJsType === 'pie' || (d.multi_series && d.labels.length > 1),
+              display: whatIfActive || isPieFamily || isRadar || (d.multi_series && d.labels.length > 1),
               labels: {
-                color: '#3a3128',
-                font: { family: 'Georgia, serif', size: 12 },
+                color: '#94A3B8',
+                font: { family: 'Space Grotesk, sans-serif', size: 11 },
                 padding: 14,
                 usePointStyle: true
               }
             },
             tooltip: {
-              backgroundColor: 'rgba(28,18,10,0.9)',
-              titleColor: '#f7f0e4',
-              bodyColor: '#f0e4cd',
+              backgroundColor: 'rgba(15,23,42,0.96)',
+              titleColor: '#F8FAFC',
+              bodyColor: '#E2E8F0',
               cornerRadius: 12,
               padding: 14,
-              borderColor: 'rgba(196,69,54,0.35)',
+              borderColor: 'rgba(79,70,229,0.35)',
               borderWidth: 1,
               callbacks: {
                 label(ctx) {
-                  const raw = ctx.parsed.y ?? ctx.parsed;
-                  return ' ' + formatNumber(typeof raw === 'object' ? raw : raw);
+                  const raw = ctx.parsed.y ?? ctx.parsed.r ?? ctx.parsed;
+                  return ' ' + formatNumber(typeof raw === 'object' ? raw.y ?? raw.r ?? 0 : raw);
                 }
               }
             }
           },
-          scales: chartJsType !== 'pie' ? {
-            x: {
-              grid: { color: 'rgba(160,140,115,0.18)', drawTicks: false },
-              ticks: { color: '#5a5048', font: { family: 'Georgia, serif', size: 12 }, maxRotation: 35 },
-              border: { color: 'rgba(160,140,115,0.3)' }
-            },
-            y: {
-              grid: { color: 'rgba(160,140,115,0.18)', drawTicks: false },
-              ticks: { color: '#5a5048', font: { family: 'Georgia, serif', size: 12 }, callback: v => formatNumber(v) },
-              border: { color: 'rgba(160,140,115,0.3)' }
-            }
-          } : {}
-        }
-      });
+          scales: !(isPieFamily && !isPolar)
+            ? ((isRadar || isPolar)
+              ? getRadialScaleOptions(isRadar)
+              : {
+                  x: {
+                    grid: { color: 'rgba(148,163,184,0.18)', drawTicks: false },
+                    type: isScatter || isBubble ? 'linear' : 'category',
+                    ticks: { color: '#94A3B8', font: { family: 'Space Grotesk, sans-serif', size: 11 }, maxRotation: 35 },
+                    title: isScatter || isBubble ? { display: true, text: numericCols[0] || labelColumn, color: '#94A3B8' } : undefined,
+                    border: { color: 'rgba(148,163,184,0.28)' }
+                  },
+                  y: {
+                    grid: { color: 'rgba(148,163,184,0.18)', drawTicks: false },
+                    ticks: { color: '#94A3B8', font: { family: 'Space Grotesk, sans-serif', size: 11 }, callback: v => formatNumber(v) },
+                    title: isScatter || isBubble ? { display: true, text: numericCols[1] || d.value_field || 'Value', color: '#94A3B8' } : undefined,
+                    border: { color: 'rgba(148,163,184,0.28)' }
+                  }
+                })
+            : {}
+        };
+
+      if (chart) {
+        chart.config.type = chartJsType;
+        chart.data = chartData;
+        chart.options = chartOptions;
+        chart.update();
+      } else {
+        chart = new Chart(chartCanvas.getContext('2d'), {
+          type: chartJsType,
+          data: chartData,
+          options: chartOptions
+        });
+      }
 
       chartWrap.classList.add('result-ready');
       chartCard.classList.add('result-ready');
+      triggerAnimate(chartWrap, 'viz-pop-in');
+      triggerAnimate(chartCard, 'viz-pop-in');
+      renderCompareChart(normalizedPayload);
     }
 
     // â”€â”€â”€ History â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     async function loadHistory() {
+      if (!appSettings.showHistory) {
+        historyBox.innerHTML = '<div class="history-empty">History is hidden by settings.</div>';
+        return;
+      }
+
       try {
         const payload = await fetchJson('/api/history?sessionId=' + encodeURIComponent(sessionId));
-        if (!payload.history.length) { historyBox.textContent = 'No messages yet.'; return; }
-        const lines = payload.history.slice(-5).map(item => 'Q: ' + item.question + '\nSQL: ' + item.sql_query);
-        historyBox.textContent = lines.join('\n\n');
+        if (!payload.history.length) {
+          historyBox.innerHTML = '<div class="history-empty">No messages yet.</div>';
+          return;
+        }
+
+        const items = payload.history.slice(-8).reverse().map((item, idx) => {
+          const q = escapeHtml(item.question || 'No question');
+          const sql = escapeHtml(item.sql_query || 'No SQL');
+          const encodedQuestion = encodeURIComponent(item.question || '');
+          return (
+            '<div class="history-item">' +
+              '<div class="history-item-top">' +
+                '<span class="history-index">#' + (idx + 1) + '</span>' +
+                '<button type="button" class="secondary history-copy-btn" data-copy="' + encodedQuestion + '">Copy</button>' +
+              '</div>' +
+              '<div class="history-question">' + q + '</div>' +
+              '<div class="history-sql">' + sql + '</div>' +
+            '</div>'
+          );
+        });
+
+        historyBox.innerHTML = items.join('');
       } catch (_error) {
-        historyBox.textContent = 'History unavailable.';
+        historyBox.innerHTML = '<div class="history-empty">History unavailable.</div>';
       }
     }
 
@@ -702,8 +3136,12 @@
       if (!fileName) { setStatus('Select a dataset first.'); return; }
       if (!question) { setStatus('Enter a business question.'); return; }
 
+      scrollToOutputWindow();
+
       generateButton.disabled = true;
       setStatus('Generating SQL and dashboard...');
+      resetPipelineProgressVisual();
+      startPipelineProgress();
 
       // Loading shimmer on chart area
       chartWrap.classList.remove('result-ready');
@@ -715,11 +3153,25 @@
       destroyChart();
 
       try {
-        const payload = await fetchJson('/api/query', {
+        const endpoint = authToken ? '/api/v3/query' : '/api/query';
+        const reqHeaders = { 'Content-Type': 'application/json' };
+        if (authToken) reqHeaders['Authorization'] = 'Bearer ' + authToken;
+        const payload = await fetchJson(endpoint, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ fileName, question, sessionId })
+          headers: reqHeaders,
+          body: JSON.stringify({
+            fileName,
+            question,
+            sessionId,
+            preferences: {
+              strictness: appSettings.queryStrictness
+            }
+          })
         });
+
+        if (!payload || !payload.sql_query || !Array.isArray(payload.result_rows) || !Array.isArray(payload.result_columns)) {
+          throw new Error('The relational schema is not present. Please verify again.');
+        }
 
         chartWrap.classList.remove('loading');
 
@@ -728,23 +3180,40 @@
           setTimeout(() => triggerAnimate(el.closest ? el : el, 'animate-in'), i * 60);
         });
 
-        intentBox.textContent = JSON.stringify(payload.intent, null, 2);
-        validationBox.textContent = payload.validation_status + (payload.validation_error ? '\n' + payload.validation_error : '');
+        intentBox.textContent = JSON.stringify(payload.intent || {}, null, 2);
+        validationBox.textContent = formatValidationDetails(payload);
         sqlBox.textContent = payload.sql_query;
-        explanationBox.textContent = payload.sql_explanation;
+        explanationBox.textContent = payload.sql_explanation || 'No explanation available.';
 
         triggerAnimate(modeBox, 'pop-in');
-        modeBox.textContent = payload.mode;
+        modeBox.textContent = payload.mode || 'local';
 
+        setCurrentDashboardPayload(payload);
         renderChart(payload);
         renderTable(payload.result_columns, payload.result_rows);
+        displayInsight(payload);
+        displayChartOptions(payload);
+        completePipelineProgress(payload);
         await loadHistory();
 
         setStatus('Dashboard generated. Ask a follow-up to filter further.');
+        openChatFlow(payload);
       } catch (error) {
+        const errorRaw = (error && error.message ? error.message : '').toLowerCase();
+        if (errorRaw.includes('invalid or expired token') || errorRaw.includes('authorization token is required')) {
+          doLogout();
+          chartWrap.classList.remove('loading');
+          chartFallback.textContent = 'Session expired. Please sign in again.';
+          setStatus('Session expired. Please sign in again.');
+          failPipelineProgress('Session expired during protected request.');
+          openAuthModal();
+          return;
+        }
+        const calmMessage = toCalmMessage(error, 'query');
         chartWrap.classList.remove('loading');
-        chartFallback.textContent = error.message;
-        setStatus(error.message);
+        chartFallback.textContent = calmMessage;
+        failPipelineProgress(calmMessage);
+        setStatus(calmMessage);
       } finally {
         generateButton.disabled = false;
       }
@@ -753,9 +3222,23 @@
     // â”€â”€â”€ Event Wiring â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     refreshButton.addEventListener('click', loadFiles);
-    demoRefreshButton.addEventListener('click', loadDemoQueries);
+    demoRefreshButton.addEventListener('click', openDemoQueryModal);
     fileSelect.addEventListener('change', loadSchema);
+    fileSelect.addEventListener('change', loadPreview);
     uploadButton.addEventListener('click', uploadCsv);
+    previewReloadBtn.addEventListener('click', loadPreview);
+    voiceAskBtn.addEventListener('click', toggleVoiceAsk);
+    compareToggleBtn.addEventListener('click', () => setCompareMode(!compareModeEnabled));
+    compareChartSelect.addEventListener('change', () => { if (currentDashboardPayload) renderCompareChart(currentDashboardPayload); });
+    speakNarrativeBtn.addEventListener('click', speakNarrative);
+    pauseNarrativeBtn.addEventListener('click', toggleNarrativePause);
+    speedNarrativeBtn.addEventListener('click', cycleNarrativeSpeed);
+    regenerateNarrativeBtn.addEventListener('click', () => renderNarrative(currentDashboardPayload));
+    exportPngBtn.addEventListener('click', exportChartPng);
+    exportCsvBtn.addEventListener('click', exportRowsCsv);
+    exportSqlBtn.addEventListener('click', exportSqlText);
+    copySqlBtn.addEventListener('click', copySqlText);
+    exportNarrativeBtn.addEventListener('click', exportNarrativeText);
     generateButton.addEventListener('click', generateDashboard);
     questionInput.addEventListener('keydown', event => {
       if (event.key === 'Enter' && !event.shiftKey) {
@@ -764,6 +3247,59 @@
       }
     });
 
+    // Auth event wiring
+    // Chat flow wiring
+    demoApplyBtn.addEventListener('click', async () => {
+      demoQueryCount = parseInt(demoCountSelect.value, 10) || 8;
+      updateDemoConfigSummary();
+      closeDemoQueryModal();
+      await loadDemoQueries();
+    });
+    demoModalCloseBtn.addEventListener('click', closeDemoQueryModal);
+    demoModalCancelBtn.addEventListener('click', closeDemoQueryModal);
+    demoQueryModal.addEventListener('click', e => { if (e.target === demoQueryModal) closeDemoQueryModal(); });
+    chatSendBtn.addEventListener('click', sendChatFollowUp);
+    chatSuggestBtn.addEventListener('click', loadFollowUpSuggestions);
+    chatClearBtn.addEventListener('click', resetChatFlow);
+    chatInput.addEventListener('keydown', e => { if (e.key === 'Enter') sendChatFollowUp(); });
+    fileSelect.addEventListener('change', resetChatFlow);
+
+    authLoginBtn.addEventListener('click', openAuthModal);
+    authLogoutBtn.addEventListener('click', doLogout);
+    authModal.addEventListener('click', e => { if (e.target === authModal) closeAuthModal(); });
+    authModalCloseBtn.addEventListener('click', closeAuthModal);
+    document.getElementById('authLoginCancelBtn').addEventListener('click', closeAuthModal);
+    document.getElementById('authRegisterCancelBtn').addEventListener('click', closeAuthModal);
+    authTabLogin.addEventListener('click', () => switchAuthTab('login'));
+    authTabRegister.addEventListener('click', () => switchAuthTab('register'));
+    loginSubmitBtn.addEventListener('click', doLogin);
+    loginPassword.addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+    registerSubmitBtn.addEventListener('click', doRegister);
+    registerPassword.addEventListener('keydown', e => { if (e.key === 'Enter') doRegister(); });
+
+    historyBox.addEventListener('click', async (event) => {
+      const btn = event.target.closest('.history-copy-btn');
+      if (!btn) return;
+      const text = decodeURIComponent(btn.dataset.copy || '');
+      try {
+        await copyTextToClipboard(text);
+        const old = btn.textContent;
+        btn.textContent = 'Copied';
+        setTimeout(() => { btn.textContent = old; }, 1000);
+      } catch (_err) {
+        setStatus('Copy failed. Try again.');
+      }
+    });
+
+    initMergedVisualEffects();
+    restoreAuthState();
+    initVoiceFeatures();
+    updateNarrativeSpeechUi();
+    syncSettingsControls();
+    applySettingsEffects();
+    updateDemoConfigSummary();
+    renderDatasetProfile();
+    renderNarrative(null);
     loadFiles();
     loadHistory();
   </script>

@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PROMPT2QUERY | Enterprise BI</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0B0F19; --card-bg: #111827; --line: #1E293B;
+      --ink: #F8FAFC; --soft: #94A3B8; --accent: #4f46e5;
+      --glow: rgba(79, 70, 229, 0.4);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Space Grotesk', sans-serif;
+      background: var(--bg); color: var(--ink);
+      line-height: 1.6; overflow-x: hidden;
+    }
+
+    /* --- HERO & BRANDING --- */
+    .brand-hero {
+      height: 80vh; display: flex; align-items: center; justify-content: center;
+      text-align: center; background: radial-gradient(circle at center, #1e1b4b 0%, var(--bg) 70%);
+    }
+    .hero-content { max-width: 800px; padding: 0 20px; }
+    .eyebrow { text-transform: uppercase; color: var(--accent); letter-spacing: 4px; font-weight: 700; margin-bottom: 1rem; }
+    .brand-title { font-size: clamp(3rem, 8vw, 5rem); font-weight: 800; letter-spacing: -2px; line-height: 1; margin-bottom: 1.5rem; }
+    .brand-info { color: var(--soft); font-size: 1.2rem; margin-bottom: 2.5rem; }
+    .scroll-btn { background: none; border: 1px solid var(--line); color: var(--ink); padding: 15px 30px; border-radius: 50px; cursor: pointer; transition: 0.3s; }
+    .scroll-btn:hover { border-color: var(--accent); box-shadow: 0 0 20px var(--glow); }
+
+    /* --- LAYOUT --- */
+    .workspace-section { padding: 80px 20px; min-height: 100vh; display: flex; flex-direction: column; align-items: center; }
+    .luxury-card { background: var(--card-bg); border: 1px solid var(--line); border-radius: 24px; padding: 40px; width: 100%; max-width: 1000px; position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+    
+    .badge { background: #1e1b4b; color: #818cf8; padding: 4px 12px; border-radius: 50px; font-size: 0.75rem; font-weight: 700; }
+
+    /* --- SECTION 01: UPLOAD --- */
+    .upload-container { display: grid; grid-template-columns: 1fr 60px 1fr; gap: 20px; align-items: center; margin: 30px 0; }
+    .dropzone-area { 
+      border: 2px dashed var(--line); border-radius: 20px; padding: 50px 20px; text-align: center; 
+      cursor: pointer; transition: 0.3s; background: rgba(255,255,255,0.02); 
+    }
+    .dropzone-area:hover { border-color: var(--accent); background: rgba(79, 70, 229, 0.05); }
+    .divider { color: var(--line); font-weight: 900; text-align: center; }
+    
+    select, textarea { 
+      width: 100%; background: #000 !important; border: 1px solid var(--line); 
+      color: var(--ink); border-radius: 12px; padding: 15px; font-family: inherit; transition: 0.3s;
+    }
+    select:focus, textarea:focus { border-color: var(--accent); outline: none; }
+
+    .btn-primary { 
+      background: var(--accent); color: white; border: none; border-radius: 12px; 
+      padding: 18px 32px; font-weight: 700; cursor: pointer; transition: 0.3s; width: 100%;
+      text-transform: uppercase; letter-spacing: 1px;
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 25px var(--glow); }
+    .btn-secondary { background: transparent; border: 1px solid var(--line); color: var(--ink); border-radius: 12px; padding: 12px 24px; cursor: pointer; font-weight: 600; }
+    .settings-fab {
+      position: fixed; right: 20px; bottom: 20px; width: 52px; height: 52px; border-radius: 50%;
+      border: 1px solid var(--line); background: var(--accent); color: #fff; font-size: 1.3rem;
+      box-shadow: 0 10px 26px rgba(79, 70, 229, 0.35); cursor: pointer; z-index: 1001;
+    }
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.72); display: grid; place-items: center; z-index: 1000; }
+    .modal-overlay.hidden { display: none; }
+    .modal-box { background: #0f172a; border: 1px solid var(--line); border-radius: 16px; width: min(460px, calc(100% - 30px)); padding: 20px; }
+    .modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .modal-close-btn { background: transparent; border: 1px solid var(--line); color: var(--soft); border-radius: 10px; padding: 6px 10px; cursor: pointer; }
+    .modal-field { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+    .settings-toggle { margin: 0; color: var(--soft); font-size: 0.92rem; display: flex; align-items: center; gap: 10px; }
+    .settings-toggle input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--accent); }
+    .key-status { color: var(--soft); font-size: 0.82rem; }
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+
+    /* --- SECTION 02: PROMPT --- */
+    #questionInput { min-height: 150px; font-size: 1.1rem; resize: vertical; margin: 20px 0; }
+
+    /* --- DEMO POPUP --- */
+    .demo-wrapper { position: relative; }
+    .luxury-popup {
+      position: absolute; top: calc(100% + 15px); left: 0; width: 320px; 
+      background: #0f172a; border: 1px solid var(--accent); 
+      padding: 25px; border-radius: 16px; display: none; z-index: 100;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.8);
+    }
+    .popup-field { margin-bottom: 15px; }
+    .popup-field label { display: block; font-size: 0.75rem; color: var(--soft); margin-bottom: 6px; text-transform: uppercase; }
+    .demo-item { 
+      padding: 12px; border-bottom: 1px solid var(--line); cursor: pointer; 
+      font-size: 0.9rem; transition: 0.2s; 
+    }
+    .demo-item:hover { background: rgba(79, 70, 229, 0.1); padding-left: 20px; color: var(--accent); }
+
+    /* --- SECTION 03: RESULTS --- */
+    .results-grid { width: 100%; max-width: 1200px; display: flex; flex-direction: column; gap: 24px; }
+    .meta-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; }
+    .card { background: var(--card-bg); border: 1px solid var(--line); border-radius: 20px; padding: 25px; }
+    
+    .dual { padding: 0 !important; overflow: hidden; display: flex; flex-direction: column; }
+    .half { padding: 20px; flex: 1; }
+    .border-top { border-top: 1px solid var(--line); }
+    
+    h3 { font-size: 0.75rem; color: var(--soft); text-transform: uppercase; margin-bottom: 15px; letter-spacing: 2px; }
+    pre { font-family: 'Courier New', Courier, monospace; font-size: 0.85rem; color: #818cf8; background: rgba(0,0,0,0.4); padding: 15px; border-radius: 10px; overflow-x: auto; }
+
+    /* Visualization */
+    #chartWrap { height: 450px; position: relative; }
+    .table-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid var(--line); }
+    table { width: 100%; border-collapse: collapse; }
+    th { background: #1e293b; text-align: left; padding: 15px; font-size: 0.8rem; color: var(--soft); }
+    td { padding: 15px; border-bottom: 1px solid var(--line); font-size: 0.9rem; }
+
+    /* Startup Overlay */
+    #startup-overlay { position: fixed; inset: 0; background: var(--bg); z-index: 9999; display: flex; align-items: center; justify-content: center; transition: 0.8s; }
+    .reveal-on-scroll { opacity: 0; transform: translateY(40px); transition: 0.8s cubic-bezier(0.2, 0.8, 0.2, 1); }
+    .is-visible { opacity: 1; transform: translateY(0); }
+  </style>
+</head>
+<body>
+
+  <div id="startup-overlay"><h1 style="color:var(--accent); letter-spacing:15px; font-weight: 900;">PROMPT2QUERY</h1></div>
+
+  <section class="brand-hero">
+    <div class="hero-content">
+      <p class="eyebrow">Intelligence Simplified</p>
+      <h1 class="brand-title">PROMPT2QUERY</h1>
+      <p class="brand-info">
+        The industrial standard for conversational data analysis. 
+        Transform complex datasets into visual stories instantly with our enterprise-grade AI engine.
+      </p>
+      <button class="scroll-btn" onclick="scrollToSection('upload-section')">Get Started <span>↓</span></button>
+    </div>
+  </section>
+
+  <section id="upload-section" class="workspace-section reveal-on-scroll">
+    <div class="luxury-card">
+      <div style="margin-bottom: 30px;">
+          <span class="badge">SYSTEM READY</span>
+          <h2 style="margin-top:12px; font-size: 1.8rem;">01. Dataset Initialization</h2>
+          <p style="color: var(--soft);">Upload your local CSV or select an existing project from the secure server.</p>
+      </div>
+
+      <div class="upload-container">
+        <div class="dropzone-area" onclick="document.getElementById('uploadInput').click()">
+          <input type="file" id="uploadInput" hidden accept=".csv">
+          <div style="font-size: 2.5rem; margin-bottom: 10px;">☁️</div>
+          <p id="fileNameDisplay">Drag CSV here or <span style="color:var(--accent); font-weight: 700;">Browse Explorer</span></p>
+        </div>
+
+        <div class="divider">OR</div>
+
+        <div>
+          <label style="font-size: 0.7rem; color:var(--soft); font-weight: bold; margin-bottom: 8px; display: block;">SERVER DATASETS</label>
+          <select id="fileSelect"></select>
+          <button id="refreshFiles" class="btn-secondary" style="width:100%; margin-top:15px;">↻ Refresh Assets</button>
+        </div>
+      </div>
+
+      <button class="btn-primary" onclick="scrollToSection('prompt-section')">Confirm & Proceed to Prompt</button>
+    </div>
+  </section>
+
+  <section id="prompt-section" class="workspace-section reveal-on-scroll">
+    <div class="luxury-card">
+      <div class="step-header">
+        <span class="badge">CONVERSATIONAL AI</span>
+        <h2 style="margin-top:10px; font-size: 1.8rem;">02. Analysis Intent</h2>
+      </div>
+      
+      <textarea id="questionInput" placeholder="e.g., 'Compare the average revenue across different regions for Q4'"></textarea>
+      
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div class="demo-wrapper">
+          <button id="demoBtn" class="btn-secondary">Demo Queries</button>
+          
+          <div id="demoPopup" class="luxury-popup">
+            <div class="popup-field">
+              <label>Output Format</label>
+              <select id="demoFormat">
+                <option value="table">Table View</option>
+                <option value="bar">Bar Chart</option>
+                <option value="pie">Pie Chart</option>
+                <option value="line">Line Graph</option>
+              </select>
+            </div>
+            <div class="popup-field">
+              <label>Query Count</label>
+              <select id="demoCount">
+                <option>2</option><option>4</option><option>6</option>
+              </select>
+            </div>
+            <div id="demoList" style="margin: 15px 0;"></div>
+            <button class="btn-primary" style="padding:12px; font-size: 0.8rem;" onclick="generateDemos()">Generate Demos</button>
+          </div>
+        </div>
+        
+        <button id="executeBtn" class="btn-primary" style="width: 240px;">Execute Analysis</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="results-section" class="workspace-section reveal-on-scroll">
+    <div class="results-grid">
+      <div class="meta-row">
+        <div class="card">
+          <h3>Dataset Schema</h3>
+          <pre id="schemaBox">Awaiting initialization...</pre>
+        </div>
+        <div class="card dual">
+          <div class="half"><h3>User Intent</h3><pre id="intentBox">-</pre></div>
+          <div class="half border-top"><h3>AI Validation</h3><pre id="valBox">-</pre></div>
+        </div>
+        <div class="card">
+          <h3>Query History</h3>
+          <pre id="historyBox">No history in session.</pre>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Generated SQL Preview</h3>
+        <pre id="sqlBox" style="font-size: 1rem; color: #facc15;">-- SQL will appear here</pre>
+      </div>
+
+      <div class="card">
+        <h3>Visualization Output</h3>
+        <div id="chartWrap"><canvas id="mainChart"></canvas></div>
+      </div>
+
+      <div class="card">
+        <h3>Detailed Data Table</h3>
+        <div class="table-wrap"><table id="resultTable"></table></div>
+      </div>
+    </div>
+  </section>
+
+  <button class="settings-fab" id="settingsFab" title="Settings">&#9881;</button>
+
+  <div class="modal-overlay hidden" id="settingsModal">
+    <div class="modal-box">
+      <div class="modal-head">
+        <h2 style="font-size:1.2rem;">Settings</h2>
+        <button class="modal-close-btn" id="modalCloseBtn">&#10005;</button>
+      </div>
+      <div class="modal-field">
+        <label class="settings-toggle" for="saveUploadToggle">
+          <input type="checkbox" id="saveUploadToggle">
+          <span>Save uploaded files to database</span>
+        </label>
+        <div class="key-status">Off keeps uploads temporary for this session.</div>
+      </div>
+      <div class="modal-actions">
+        <button id="saveSettingsBtn" class="btn-primary" style="width:auto; padding:10px 16px;">Save</button>
+        <button id="cancelSettingsBtn" class="btn-secondary" style="width:auto; padding:10px 16px;">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let chart = null;
+
+    // --- CORE API HANDLERS ---
+    async function api(url, method='GET', body=null) {
+      try {
+        const opt = { method, headers: {'Content-Type': 'application/json'}};
+        if(body) opt.body = JSON.stringify(body);
+        const r = await fetch(url, opt); 
+        return await r.json();
+      } catch (e) {
+        console.error("API Error:", e);
+        return { error: true };
+      }
+    }
+
+    async function loadFiles() {
+      const d = await api('/api/files');
+      if(d.files) {
+        document.getElementById('fileSelect').innerHTML = d.files.map(f => `<option value="${f}">${f}</option>`).join('');
+        loadSchema();
+      }
+    }
+
+    async function loadSchema() {
+      const f = document.getElementById('fileSelect').value;
+      if(!f) return;
+      const d = await api(`/api/schema?file=${encodeURIComponent(f)}`);
+      document.getElementById('schemaBox').textContent = d.columns?.map(c => `${c.name} [${c.type}]`).join('\n') || "No schema data";
+    }
+
+    async function loadHistory() {
+      const d = await api('/api/history');
+      if(d.history) {
+        document.getElementById('historyBox').textContent = d.history.slice(-5).map(h => `> ${h.question}`).join('\n');
+      }
+    }
+
+    // --- UI HELPERS ---
+    function scrollToSection(id) { document.getElementById(id).scrollIntoView({ behavior: 'smooth' }); }
+
+    document.getElementById('uploadInput').onchange = async (e) => {
+      if(!e.target.files[0]) return;
+      const fd = new FormData(); fd.append('file', e.target.files[0]);
+      const saveToDatabase = localStorage.getItem('bi_save_upload_to_database') === 'true';
+      fd.append('saveToDatabase', saveToDatabase ? 'true' : 'false');
+      document.getElementById('fileNameDisplay').innerHTML = `Selected: <b>${e.target.files[0].name}</b>`;
+      await fetch('/api/upload', { method:'POST', body: fd });
+      loadFiles();
+    };
+
+    document.getElementById('executeBtn').onclick = async () => {
+      const q = document.getElementById('questionInput').value;
+      const f = document.getElementById('fileSelect').value;
+      if(!q) return alert("Please enter an analysis prompt");
+
+      const btn = document.getElementById('executeBtn');
+      btn.innerText = "Analyzing...";
+      scrollToSection('results-section');
+
+      const d = await api('/api/query', 'POST', { fileName: f, question: q });
+      
+      document.getElementById('intentBox').textContent = d.intent ? JSON.stringify(d.intent, null, 2) : "N/A";
+      document.getElementById('valBox').textContent = d.validation_status || "Success";
+      document.getElementById('sqlBox').textContent = d.sql_query || "-- Error generating SQL";
+      
+      renderTable(d.result_columns || [], d.result_rows || []);
+      renderChart(d);
+      loadHistory();
+      btn.innerText = "Execute Analysis";
+    };
+
+    function renderTable(cols, rows) {
+      const t = document.getElementById('resultTable');
+      if(!cols.length) { t.innerHTML = ""; return; }
+      t.innerHTML = `<thead><tr>${cols.map(c => `<th>${c}</th>`).join('')}</tr></thead>
+                     <tbody>${rows.map(r => `<tr>${cols.map(c => `<td>${r[c]}</td>`).join('')}</tr>`).join('')}</tbody>`;
+    }
+
+    function renderChart(data) {
+      const ctx = document.getElementById('mainChart').getContext('2d');
+      if(chart) chart.destroy();
+      
+      const type = data.chart_type === 'line_chart' ? 'line' : (data.chart_type === 'pie_chart' ? 'pie' : 'bar');
+      
+      chart = new Chart(ctx, {
+        type: type,
+        data: { 
+          labels: data.chart_data?.labels || [], 
+          datasets: [{ 
+            label: 'Result Data',
+            data: data.chart_data?.values || [], 
+            backgroundColor: type === 'pie' ? ['#4f46e5', '#818cf8', '#c7d2fe', '#312e81'] : '#4f46e5',
+            borderColor: '#4f46e5',
+            tension: 0.3
+          }] 
+        },
+        options: { 
+          responsive: true, 
+          maintainAspectRatio: false,
+          plugins: { legend: { labels: { color: '#94A3B8', font: { family: 'Space Grotesk' } } } },
+          scales: type !== 'pie' ? {
+            y: { grid: { color: '#1E293B' }, ticks: { color: '#94A3B8' } },
+            x: { grid: { color: '#1E293B' }, ticks: { color: '#94A3B8' } }
+          } : {}
+        }
+      });
+    }
+
+    // --- DEMO POPUP LOGIC ---
+    document.getElementById('demoBtn').onclick = (e) => {
+      e.stopPropagation();
+      const p = document.getElementById('demoPopup');
+      p.style.display = p.style.display === 'block' ? 'none' : 'block';
+    };
+
+    function generateDemos() {
+      const list = document.getElementById('demoList');
+      const count = document.getElementById('demoCount').value;
+      const format = document.getElementById('demoFormat').value;
+      
+      const queries = [
+        "What is the average value per category?",
+        "Show me the top 5 records by total spend.",
+        "Trend analysis of revenue over time.",
+        "Distribution of users by region.",
+        "Compare year-over-year growth.",
+        "Identify outliers in the current dataset."
+      ];
+
+      list.innerHTML = queries.slice(0, count).map(q => 
+        `<div class="demo-item" onclick="setPrompt('${q} using a ${format}')">${q}</div>`
+      ).join('');
+    }
+
+    function setPrompt(txt) {
+      document.getElementById('questionInput').value = txt;
+      document.getElementById('demoPopup').style.display = 'none';
+    }
+
+    function openSettings() {
+      document.getElementById('saveUploadToggle').checked = localStorage.getItem('bi_save_upload_to_database') === 'true';
+      document.getElementById('settingsModal').classList.remove('hidden');
+    }
+
+    function closeSettings() {
+      document.getElementById('settingsModal').classList.add('hidden');
+    }
+
+    // --- INIT ---
+    window.onload = () => {
+      setTimeout(() => {
+        document.getElementById('startup-overlay').style.opacity = '0';
+        setTimeout(() => document.getElementById('startup-overlay').remove(), 800);
+      }, 1000);
+
+      loadFiles();
+      loadHistory();
+      
+      // Close popup on outside click
+      document.addEventListener('click', () => {
+        document.getElementById('demoPopup').style.display = 'none';
+      });
+      document.getElementById('demoPopup').onclick = (e) => e.stopPropagation();
+
+      // Scroll Animation
+      const obs = new IntersectionObserver((es) => {
+        es.forEach(e => { if(e.isIntersecting) e.target.classList.add('is-visible'); });
+      }, { threshold: 0.1 });
+      document.querySelectorAll('.reveal-on-scroll').forEach(el => obs.observe(el));
+
+      document.getElementById('settingsFab').onclick = openSettings;
+      document.getElementById('modalCloseBtn').onclick = closeSettings;
+      document.getElementById('cancelSettingsBtn').onclick = closeSettings;
+      document.getElementById('settingsModal').addEventListener('click', (e) => {
+        if (e.target.id === 'settingsModal') closeSettings();
+      });
+      document.getElementById('saveSettingsBtn').onclick = () => {
+        const checked = document.getElementById('saveUploadToggle').checked;
+        localStorage.setItem('bi_save_upload_to_database', checked ? 'true' : 'false');
+        closeSettings();
+      };
+    };
+
+    document.getElementById('refreshFiles').onclick = loadFiles;
+    document.getElementById('fileSelect').onchange = loadSchema;
+  </script>
+</body>
+</html>
