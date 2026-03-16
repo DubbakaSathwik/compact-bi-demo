@@ -15,6 +15,7 @@ Thumbs.db
 # Runtime/local artifacts
 *.log
 *.out
+data/users.json
 data/upload_registry.json
 data/*_temp_*.csv
 data/*_temp_*.xlsx

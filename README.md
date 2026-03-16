@@ -92,3 +92,47 @@ compact-bi-demo/
 
 - Node.js 18 or later
 - A free [Google Gemini API key](https://aistudio.google.com/app/apikey) *(optional — falls back gracefully)*
+
+---
+
+## Public URL Checklist
+
+Before sharing this app with friends on a public URL:
+
+1. Set production environment variables on your host:
+	- `GEMINI_API_KEY`
+	- `JWT_SECRET` (required, use a long random value)
+	- `JWT_EXPIRES_IN` (optional, default: `8h`)
+	- `PORT` (usually provided by host)
+2. Keep `.env` private and never commit it.
+3. Do not commit real user data in `data/users.json`.
+4. Start with:
+	- `npm start`
+
+The server listens on `process.env.PORT` (fallback: `3000`), which is compatible with most PaaS providers.
+
+---
+
+## Deploy Options
+
+### Option A: Railway / Render (recommended)
+
+1. Import this GitHub repo.
+2. Set the environment variables listed above.
+3. Build command: `npm install`
+4. Start command: `npm start`
+5. Deploy and share the generated HTTPS URL.
+
+### Option B: Temporary public sharing (quick demo)
+
+Run locally, then expose with a tunnel:
+
+```bash
+cloudflared tunnel --url http://localhost:3000
+```
+
+or
+
+```bash
+ngrok http 3000
+```
