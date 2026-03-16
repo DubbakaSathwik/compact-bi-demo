@@ -11,3 +11,14 @@ Thumbs.db
 # Editor folders
 .vscode/
 .idea/
+
+# Runtime/local artifacts
+*.log
+*.out
+data/upload_registry.json
+data/*_temp_*.csv
+data/*_temp_*.xlsx
+data/*_temp_*.xls
+data/*_temp_*.json
+data/*_temp_*.tsv
+data/*_temp_*.txt

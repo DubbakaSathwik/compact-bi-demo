@@ -3,20 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PROMPT2QUERY | Enterprise BI</title>
+  <title>INTELLI-QUERY | Enterprise BI</title>
   <link rel="stylesheet" href="style.css">
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=IBM+Plex+Mono:wght@500;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-  <div id="startup-overlay">
-    <h1 style="color:var(--accent); letter-spacing:15px; font-weight:900; font-family:'Space Grotesk',sans-serif;">PROMPT2QUERY</h1>
-  </div>
   <main class="shell">
     <section class="brand-hero reveal-on-scroll">
       <div class="hero-content">
         <p class="eyebrow">Intelligence Simplified</p>
-        <h1 class="brand-title">PROMPT2QUERY</h1>
+        <h1 class="brand-title" aria-label="INTELLI-QUERY">
+          <span class="brand-human">INTELLI</span>
+          <span class="brand-divider"></span>
+          <span class="brand-machine">QUERY</span>
+        </h1>
         <p class="brand-info">The enterprise-grade AI engine for conversational data analysis.<br>Transform complex datasets into visual stories — instantly.</p>
         <div class="hero-actions">
           <button class="scroll-btn" onclick="document.querySelector('.panel').scrollIntoView({behavior:'smooth'})">Get Started ↓</button>
@@ -25,7 +26,7 @@
               <span id="authUserName" class="auth-user-name">Hello</span>
               <button id="authLogoutBtn" class="secondary auth-btn">Sign Out</button>
             </div>
-            <button id="authLoginBtn" class="secondary auth-btn">&#128100; Sign In</button>
+            <button id="authLoginBtn" class="secondary auth-btn" type="button">&#128100; Sign In</button>
           </div>
         </div>
       </div>
@@ -36,7 +37,7 @@
         <div class="card-head">
           <div>
             <span class="badge">SYSTEM READY</span>
-            <h2 style="margin-top:10px;">01. Dataset Initialization</h2>
+            <h2 style="margin-top:10px;">Dataset Initialization</h2>
           </div>
           <span id="tableNameBadge" class="badge muted">No file</span>
         </div>
@@ -52,7 +53,14 @@
         <div class="row split upload-row">
           <div class="grow">
             <label for="uploadInput">Upload CSV</label>
-            <input id="uploadInput" type="file" accept=".csv">
+            <input id="uploadInput" class="upload-input" type="file" accept=".csv">
+            <div id="uploadDropZone" class="upload-dropzone" tabindex="0" role="button" aria-controls="uploadInput" aria-label="Choose or drop a CSV file">
+              <div class="upload-dropzone-copy">
+                <div class="upload-dropzone-title">Choose a file or drop a CSV here</div>
+                <div id="uploadFileName" class="upload-file-name">No file selected</div>
+              </div>
+              <span class="upload-dropzone-action">Browse</span>
+            </div>
           </div>
           <button id="uploadButton" class="secondary">Upload CSV</button>
         </div>
@@ -69,19 +77,32 @@
           </div>
         </div>
 
-        <div class="row">
+        <div id="queryInputRow" class="row">
           <label for="questionInput">Ask a business question</label>
           <textarea id="questionInput" rows="3" placeholder="Show monthly revenue trend for 2024"></textarea>
         </div>
 
-        <div class="row actions">
-          <button id="generateButton">Generate Dashboard</button>
-          <button id="demoRefreshButton" class="secondary">Generate Demo Queries</button>
-          <button id="voiceAskBtn" class="secondary" title="Speak your query">Voice Ask</button>
-          <span id="statusText" class="status">Ready.</span>
+        <div id="queryActionsRow" class="row actions query-actions">
+          <div class="query-actions-left">
+            <button id="generateButton">Generate Dashboard</button>
+            <div class="voice-ask-group">
+              <button id="voiceAskBtn" class="secondary" title="Speak your query">Voice Ask</button>
+              <div id="voiceAskControls" class="voice-ask-controls hidden">
+                <button id="voiceDoneBtn" class="secondary" type="button">Done</button>
+                <button id="voiceCancelBtn" class="secondary" type="button">Stop</button>
+              </div>
+            </div>
+          </div>
+          <div class="query-actions-right">
+            <div class="query-actions-buttons">
+              <button id="demoRefreshButton" class="secondary">Generate Demo Queries</button>
+              <button id="downloadReportBtn" class="secondary">Download Analysis Report</button>
+            </div>
+            <span id="statusText" class="status">Ready.</span>
+          </div>
         </div>
 
-        <div class="row demo-row">
+        <div id="demoQueriesRow" class="row demo-row hidden">
           <div class="demo-head">
             <label>Demo Queries</label>
           </div>
@@ -119,29 +140,47 @@
 
             <div class="card mini-card left-rail-card">
               <div class="card-head">
-                <h3>Dataset Profile</h3>
-                <span id="datasetProfileBadge" class="badge muted">-</span>
+                <div>
+                  <span class="badge">DATASET</span>
+                  <h2 style="margin-top:10px;">Dataset Profile</h2>
+                </div>
+                <span id="datasetProfileBadge" class="badge muted hidden"></span>
               </div>
-              <pre id="datasetProfileBox">Select a dataset to profile columns and sample quality.</pre>
+              <div id="datasetProfileBox" class="text-box profile-box">Select a dataset to profile columns and sample quality.</div>
             </div>
-          </div>
-
-          <div class="card mini-card left-rail-card">
-            <h3>Validation</h3>
-            <pre id="validationBox">-</pre>
-          </div>
-
-          <div class="card mini-card left-rail-card">
-            <h3>Intent</h3>
-            <pre id="intentBox">-</pre>
           </div>
 
           <div class="card mini-card left-rail-card">
             <div class="card-head">
-              <h3>AI Insight</h3>
-              <span id="dataStructureBadge" class="badge muted hidden">-</span>
+              <div>
+                <span class="badge">QUALITY</span>
+                <h2 style="margin-top:10px;">Validation</h2>
+              </div>
             </div>
-            <div id="insightBox" class="text-box insight-text">Sign in and run a query to see AI-generated insights.</div>
+            <pre id="validationBox">-</pre>
+          </div>
+
+          <div class="left-rail-row left-rail-row--intel">
+            <div class="card mini-card left-rail-card">
+              <div class="card-head">
+                <div>
+                  <span class="badge">INTENT</span>
+                  <h2 style="margin-top:10px;">Intent</h2>
+                </div>
+              </div>
+              <pre id="intentBox">-</pre>
+            </div>
+
+            <div class="card mini-card left-rail-card">
+              <div class="card-head">
+                <div>
+                  <span class="badge">INSIGHT</span>
+                  <h2 style="margin-top:10px;">AI Insight</h2>
+                </div>
+                <span id="dataStructureBadge" class="badge muted hidden"></span>
+              </div>
+              <div id="insightBox" class="text-box insight-text">Sign in and run a query to see AI-generated insights.</div>
+            </div>
           </div>
         </div>
       </div>
@@ -152,15 +191,20 @@
       <div class="left-taskbar-inner">
         <div class="left-taskbar-stack">
           <div class="card mini-card left-rail-card">
-            <h3>Conversation Memory</h3>
-            <div id="historyBox" class="history-list">No messages yet.</div>
+            <div class="card-head">
+              <div>
+                <span class="badge">CONTEXT</span>
+                <h2 style="margin-top:10px;">Conversation Memory</h2>
+              </div>
+            </div>
+            <div id="historyBox" class="history-list"><div class="history-empty">Sign in to show conversation memory.</div></div>
           </div>
 
           <div class="card mini-card left-rail-card" id="previewCard">
             <div class="card-head">
               <div>
                 <span class="badge">RAW DATA</span>
-                <h2 style="margin-top:10px;">06. Data Preview</h2>
+                <h2 style="margin-top:10px;">Data Preview</h2>
               </div>
               <button id="previewReloadBtn" class="secondary">Refresh Preview</button>
             </div>
@@ -173,13 +217,19 @@
             <div class="card-head">
               <div>
                 <span class="badge">INSIGHTS</span>
-                <h2 style="margin-top:10px;">05. Narrative Report</h2>
+                <h2 style="margin-top:10px;">Narrative Report</h2>
               </div>
               <div class="narrative-actions">
                 <button id="speakNarrativeBtn" class="secondary">Speak</button>
                 <div id="narrativeSpeechControls" class="narrative-speech-controls hidden">
                   <button id="pauseNarrativeBtn" class="secondary">Pause</button>
-                  <button id="speedNarrativeBtn" class="secondary">Speed 1.0x</button>
+                  <select id="speedNarrativeSelect" class="narrative-speed-select" aria-label="Narration speed">
+                    <option value="0.8">0.8x</option>
+                    <option value="0.95" selected>0.95x</option>
+                    <option value="1.1">1.1x</option>
+                    <option value="1.25">1.25x</option>
+                    <option value="1.4">1.4x</option>
+                  </select>
                 </div>
                 <button id="regenerateNarrativeBtn" class="secondary">Regenerate</button>
               </div>
@@ -199,11 +249,11 @@
         <div class="card-head">
           <div>
             <span class="badge">AI OUTPUT</span>
-            <h2 style="margin-top:10px;">02. Generated SQL</h2>
+            <h2 style="margin-top:10px;">Generated SQL</h2>
           </div>
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
             <button id="copySqlBtn" class="secondary">Copy SQL</button>
-            <span id="modeBox" class="badge muted">-</span>
+            <span id="modeBox" class="badge muted hidden"></span>
           </div>
         </div>
         <pre id="sqlBox">No SQL yet.</pre>
@@ -215,11 +265,11 @@
         <div class="card-head">
           <div>
             <span class="badge">VISUALIZATION</span>
-            <h2 style="margin-top:10px;">03. Chart Output</h2>
+            <h2 style="margin-top:10px;">Chart Output</h2>
           </div>
           <div class="viz-head-actions">
             <button id="compareToggleBtn" class="secondary">Compare Mode</button>
-            <span id="chartTypeBox" class="badge">-</span>
+            <span id="chartTypeBox" class="badge hidden"></span>
           </div>
         </div>
         <div id="chartOptionsRow" class="chart-options-row hidden"></div>
@@ -231,10 +281,15 @@
         <div id="compareWrap" class="compare-wrap hidden">
           <div class="compare-head">
             <label for="compareChartSelect">Compare with</label>
+            <button id="comparePrevBtn" class="secondary compare-nav-btn" type="button" aria-label="Previous compare type">&#8592;</button>
             <select id="compareChartSelect"></select>
+            <button id="compareNextBtn" class="secondary compare-nav-btn" type="button" aria-label="Next compare type">&#8594;</button>
           </div>
-          <div class="compare-canvas-wrap">
+          <div id="compareCanvasWrap" class="compare-canvas-wrap">
             <canvas id="compareCanvas"></canvas>
+          </div>
+          <div id="compareTableWrap" class="compare-table-wrap hidden">
+            <table id="compareTable"><thead></thead><tbody></tbody></table>
           </div>
         </div>
       </div>
@@ -245,7 +300,7 @@
         <div class="card-head">
           <div>
             <span class="badge">RESULTS</span>
-            <h2 style="margin-top:10px;">04. Query Result Table</h2>
+            <h2 style="margin-top:10px;">Query Result Table</h2>
           </div>
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
             <button id="exportPngBtn" class="secondary">Export PNG</button>
@@ -274,15 +329,41 @@
           </div>
           <div style="display:flex;align-items:center;gap:10px;">
             <span class="badge" id="chatContextBadge">0 results in context</span>
-            <button class="secondary" id="chatSuggestBtn" style="padding:6px 14px;font-size:0.82rem;">Suggest Follow-ups</button>
+            <div id="followUpFilterBar" class="followup-filter-bar">
+              <select id="followUpDemoCountSelect" class="followup-filter-select" title="Follow-up demo suggestion count">
+                <option value="4">4</option>
+                <option value="6" selected>6</option>
+                <option value="8">8</option>
+                <option value="10">10</option>
+                <option value="12">12</option>
+              </select>
+              <select id="followUpDemoChartSelect" class="followup-filter-select" title="Follow-up demo chart filter">
+                <option value="all">All charts</option>
+                <option value="bar_chart">Bar</option>
+                <option value="horizontal_bar_chart">H-Bar</option>
+                <option value="line_chart">Line</option>
+                <option value="area_chart">Area</option>
+                <option value="step_line_chart">Step</option>
+                <option value="pie_chart">Pie</option>
+                <option value="donut_chart">Donut</option>
+                <option value="radar_chart">Radar</option>
+                <option value="polar_area_chart">Polar</option>
+                <option value="scatter_plot">Scatter</option>
+                <option value="bubble_chart">Bubble</option>
+                <option value="lollipop_chart">Lollipop</option>
+                <option value="ranked_table">Ranked</option>
+                <option value="table">Table</option>
+              </select>
+            </div>
+            <button class="secondary" id="chatSuggestBtn" style="padding:6px 14px;font-size:0.82rem;">Generate Follow-ups</button>
             <button class="secondary" id="chatClearBtn" style="padding:6px 14px;font-size:0.82rem;">Clear Thread</button>
           </div>
         </div>
-        <p class="chat-hint">Ask a follow-up question about the current result. The AI will refine or drill down into the active query.</p>
+        <p id="chatHint" class="chat-hint">Ask a follow-up question about the current result. The AI will refine or drill down into the active query.</p>
         <div class="chat-thread" id="chatThread">
           <!-- messages injected by JS -->
         </div>
-        <div class="chat-input-row">
+        <div id="chatInputRow" class="chat-input-row">
           <input type="text" id="chatInput" placeholder="e.g. show only top 3, filter by North region, compare as pie chart…" autocomplete="off">
           <button id="chatSendBtn">&#10148;</button>
         </div>
@@ -299,11 +380,11 @@
     <div class="modal-box">
       <div class="modal-head">
         <h2>Account</h2>
-        <button class="modal-close-btn" id="authModalCloseBtn">&#10005;</button>
+        <button class="modal-close-btn" id="authModalCloseBtn" type="button">&#10005;</button>
       </div>
       <div class="tab-nav auth-tab-nav">
-        <button class="tab-btn active" id="authTabLogin">Sign In</button>
-        <button class="tab-btn" id="authTabRegister">Register</button>
+        <button class="tab-btn active" id="authTabLogin" type="button">Sign In</button>
+        <button class="tab-btn" id="authTabRegister" type="button">Register</button>
       </div>
       <!-- Login Form -->
       <div id="authLoginPane">
@@ -317,8 +398,8 @@
         </div>
         <div class="key-status" id="loginStatus">&nbsp;</div>
         <div class="modal-actions">
-          <button id="loginSubmitBtn">Sign In</button>
-          <button class="secondary" id="authLoginCancelBtn">Cancel</button>
+          <button id="loginSubmitBtn" type="button">Sign In</button>
+          <button class="secondary" id="authLoginCancelBtn" type="button">Cancel</button>
         </div>
       </div>
       <!-- Register Form -->
@@ -337,8 +418,8 @@
         </div>
         <div class="key-status" id="registerStatus">&nbsp;</div>
         <div class="modal-actions">
-          <button id="registerSubmitBtn">Create Account</button>
-          <button class="secondary" id="authRegisterCancelBtn">Cancel</button>
+          <button id="registerSubmitBtn" type="button">Create Account</button>
+          <button class="secondary" id="authRegisterCancelBtn" type="button">Cancel</button>
         </div>
       </div>
     </div>
@@ -497,7 +578,15 @@
           <button class="demo-filter-pill" data-filter="table">&#8801; Table</button>
         </div>
       </div>
-      <div class="demo-modal-hint">Pick a count and chart style, then generate a curated set of ready-to-run demo questions.</div>
+      <div class="modal-field">
+        <label for="demoDifficultySelect">Difficulty</label>
+        <select id="demoDifficultySelect" class="demo-count-select" title="Difficulty level for demo queries">
+          <option value="simple">Simple</option>
+          <option value="standard" selected>Standard</option>
+          <option value="complex">Complex</option>
+        </select>
+      </div>
+      <div class="demo-modal-hint">Pick a count, chart style, and difficulty, then generate a curated set of ready-to-run demo questions.</div>
       <div class="modal-actions">
         <button id="demoApplyBtn">Generate</button>
         <button class="secondary" id="demoModalCancelBtn">Cancel</button>
@@ -510,6 +599,9 @@
     const refreshButton = document.getElementById('refreshButton');
     const generateButton = document.getElementById('generateButton');
     const voiceAskBtn = document.getElementById('voiceAskBtn');
+    const voiceAskControls = document.getElementById('voiceAskControls');
+    const voiceDoneBtn = document.getElementById('voiceDoneBtn');
+    const voiceCancelBtn = document.getElementById('voiceCancelBtn');
     const questionInput = document.getElementById('questionInput');
     const statusText = document.getElementById('statusText');
     const pipelineProgress = document.getElementById('pipelineProgress');
@@ -535,9 +627,16 @@
     const compareToggleBtn = document.getElementById('compareToggleBtn');
     const compareWrap = document.getElementById('compareWrap');
     const compareChartSelect = document.getElementById('compareChartSelect');
+    const comparePrevBtn = document.getElementById('comparePrevBtn');
+    const compareNextBtn = document.getElementById('compareNextBtn');
+    const compareCanvasWrap = document.getElementById('compareCanvasWrap');
+    const compareTableWrap = document.getElementById('compareTableWrap');
+    const compareTable = document.getElementById('compareTable');
     const resultTable = document.getElementById('resultTable');
     const resultMeta = document.getElementById('resultMeta');
     const uploadInput = document.getElementById('uploadInput');
+    const uploadDropZone = document.getElementById('uploadDropZone');
+    const uploadFileName = document.getElementById('uploadFileName');
     const uploadButton = document.getElementById('uploadButton');
     const saveUploadToggle = document.getElementById('saveUploadToggle');
     const saveHistoryToggle = document.getElementById('saveHistoryToggle');
@@ -552,10 +651,12 @@
     const animationLevelSelect = document.getElementById('animationLevelSelect');
     const historyBox = document.getElementById('historyBox');
     const demoRefreshButton = document.getElementById('demoRefreshButton');
+    const downloadReportBtn = document.getElementById('downloadReportBtn');
     const demoQueriesBox = document.getElementById('demoQueriesBox');
     const demoConfigSummary = document.getElementById('demoConfigSummary');
     const demoQueryModal = document.getElementById('demoQueryModal');
     const demoCountSelect = document.getElementById('demoCountSelect');
+    const demoDifficultySelect = document.getElementById('demoDifficultySelect');
     const demoApplyBtn = document.getElementById('demoApplyBtn');
     const demoModalCloseBtn = document.getElementById('demoModalCloseBtn');
     const demoModalCancelBtn = document.getElementById('demoModalCancelBtn');
@@ -572,7 +673,7 @@
     const speakNarrativeBtn = document.getElementById('speakNarrativeBtn');
     const narrativeSpeechControls = document.getElementById('narrativeSpeechControls');
     const pauseNarrativeBtn = document.getElementById('pauseNarrativeBtn');
-    const speedNarrativeBtn = document.getElementById('speedNarrativeBtn');
+    const speedNarrativeSelect = document.getElementById('speedNarrativeSelect');
     const regenerateNarrativeBtn = document.getElementById('regenerateNarrativeBtn');
     const anomalyWrap = document.getElementById('anomalyWrap');
     const anomalyChips = document.getElementById('anomalyChips');
@@ -611,11 +712,18 @@
   const chatSendBtn = document.getElementById('chatSendBtn');
   const chatSuggestBtn = document.getElementById('chatSuggestBtn');
   const chatClearBtn = document.getElementById('chatClearBtn');
+  const followUpFilterBar = document.getElementById('followUpFilterBar');
+  const followUpDemoCountSelect = document.getElementById('followUpDemoCountSelect');
+  const followUpDemoChartSelect = document.getElementById('followUpDemoChartSelect');
   const chatContextBadge = document.getElementById('chatContextBadge');
   const chatSuggestBox = document.getElementById('chatSuggestBox');
+  const queryInputRow = document.getElementById('queryInputRow');
+  const queryActionsRow = document.getElementById('queryActionsRow');
+  const demoQueriesRow = document.getElementById('demoQueriesRow');
+  const chatHint = document.getElementById('chatHint');
+  const chatInputRow = document.getElementById('chatInputRow');
 
-    const sessionId = localStorage.getItem('bi_session_id') || ('session_' + Math.random().toString(36).slice(2, 10));
-    localStorage.setItem('bi_session_id', sessionId);
+    let sessionId = 'guest_' + Math.random().toString(36).slice(2, 10);
 
     const DEFAULT_APP_SETTINGS = {
       saveUploadToDatabase: false,
@@ -649,8 +757,8 @@
     let chart = null;
     let compareChart = null;
     let hoverPreviewChart = null;
-    let authToken = null;
-    let currentUser = null;
+    var authToken = null;
+    var currentUser = null;
     let lastV3Result = null;
     let chatContext = null;   // { sql, columns, rowCount, sample, fileName }
     let currentDashboardPayload = null;
@@ -666,8 +774,15 @@
     let compareModeEnabled = false;
     let speechRecognitionInstance = null;
     let isVoiceListening = false;
+    let voiceCancelRequested = false;
+    let voiceInputSnapshot = '';
+    let runtimeDemoMode = false;
     let appSettings = loadAppSettings();
     const NARRATIVE_SPEECH_RATES = [0.8, 0.95, 1.1, 1.25, 1.4];
+    const DEFAULT_QUESTION_PLACEHOLDER = 'Show monthly revenue trend for 2024';
+    const DEMO_QUESTION_PLACEHOLDER = 'Demo mode is on. Pick one of the demo queries below to explore this dataset.';
+    const DEFAULT_CHAT_HINT = 'Ask a follow-up question about the current result. The AI will refine or drill down into the active query.';
+    const DEMO_CHAT_HINT = 'Demo mode is on. Use the suggested follow-up queries below to continue the walkthrough.';
 
     // â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
@@ -714,6 +829,42 @@
       el.classList.add(cls);
     }
 
+    function setOptionalBadge(el, value, muted = false) {
+      if (!el) return;
+      const text = String(value || '').trim();
+      if (!text || text === '-') {
+        el.textContent = '';
+        el.classList.add('hidden');
+        return;
+      }
+      el.textContent = text;
+      el.classList.remove('hidden');
+      el.classList.toggle('muted', !!muted);
+    }
+
+    function renderHistoryEmptyState(message) {
+      historyBox.innerHTML = '<div class="history-empty">' + escapeHtml(message) + '</div>';
+    }
+
+    function getConversationMemoryMessage() {
+      if (!appSettings.showHistory) return 'History is hidden by settings.';
+      if (!authToken || !currentUser) return 'Sign in to show conversation memory.';
+      return 'No messages yet.';
+    }
+
+    function updateUploadSelectionUi(file) {
+      const hasFile = !!file;
+      uploadFileName.textContent = hasFile ? file.name : 'No file selected';
+      uploadDropZone.classList.toggle('has-file', hasFile);
+    }
+
+    function updateVoiceAskUi() {
+      voiceAskControls.classList.toggle('hidden', !isVoiceListening);
+      if (!speechRecognitionInstance) return;
+      voiceAskBtn.classList.toggle('active', isVoiceListening);
+      voiceAskBtn.textContent = isVoiceListening ? 'Listening...' : 'Voice Ask';
+    }
+
     function scrollToOutputWindow() {
       if (!outputSection) return;
       outputSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -728,9 +879,20 @@
       return payload;
     }
 
+    function buildRequestContextHeaders(baseHeaders = {}) {
+      const headers = { ...(baseHeaders || {}) };
+      if (authToken) headers.Authorization = 'Bearer ' + authToken;
+      if (sessionId) headers['X-Session-Id'] = sessionId;
+      return headers;
+    }
+
     function persistAppSettings() {
       localStorage.setItem('bi_app_settings', JSON.stringify(appSettings));
       localStorage.setItem('bi_save_upload_to_database', appSettings.saveUploadToDatabase ? 'true' : 'false');
+    }
+
+    function formatNarrativeSpeed(rate) {
+      return Number(rate).toFixed(2).replace(/\.00$/, '') + 'x';
     }
 
     function syncSettingsControls() {
@@ -741,6 +903,7 @@
       defaultChartSelect.value = appSettings.defaultChartType || 'auto';
       resultRowLimitSelect.value = String(appSettings.resultRowLimit || DEFAULT_APP_SETTINGS.resultRowLimit);
       followUpCountSelect.value = String(appSettings.followUpSuggestionCount || DEFAULT_APP_SETTINGS.followUpSuggestionCount);
+      if (followUpDemoCountSelect) followUpDemoCountSelect.value = String(appSettings.followUpSuggestionCount || DEFAULT_APP_SETTINGS.followUpSuggestionCount);
       queryStrictnessSelect.value = appSettings.queryStrictness || 'balanced';
       errorDetailSelect.value = appSettings.errorDetailMode || 'friendly';
       animationLevelSelect.value = appSettings.animationLevel || 'full';
@@ -765,6 +928,7 @@
     function applyPreferredChartSetting(payload) {
       const normalized = ensureVisualPayload(payload || null);
       if (!normalized) return normalized;
+      if (normalized.user_selected_chart) return normalized;
       const preferredChart = appSettings.defaultChartType || 'auto';
       if (preferredChart === 'auto') return normalized;
       const compatibleCharts = getCompatibleCharts(normalized);
@@ -773,6 +937,37 @@
         ...normalized,
         chart_type: preferredChart,
         recommended_chart: preferredChart
+      };
+    }
+
+    function applyDemoQueryChartPreference(payload, preferredChartType) {
+      const preferred = String(preferredChartType || '').trim();
+      const normalized = ensureVisualPayload(payload || null);
+      if (!normalized || !preferred) return normalized;
+      const supportedCharts = [
+        'bar_chart', 'horizontal_bar_chart', 'line_chart', 'area_chart', 'step_line_chart',
+        'pie_chart', 'donut_chart', 'radar_chart', 'polar_area_chart', 'scatter_plot',
+        'bubble_chart', 'lollipop_chart', 'ranked_table', 'table'
+      ];
+      if (!supportedCharts.includes(preferred)) return normalized;
+
+      const hasChartData = !!(normalized.chart_data && Array.isArray(normalized.chart_data.labels) && normalized.chart_data.labels.length);
+      if ((preferred === 'pie_chart' || preferred === 'donut_chart') && hasChartData) {
+        return {
+          ...normalized,
+          chart_type: preferred,
+          recommended_chart: preferred,
+          user_selected_chart: true
+        };
+      }
+
+      const compatibleCharts = getCompatibleCharts(normalized);
+      if (!compatibleCharts.includes(preferred)) return normalized;
+      return {
+        ...normalized,
+        chart_type: preferred,
+        recommended_chart: preferred,
+        user_selected_chart: true
       };
     }
 
@@ -786,14 +981,64 @@
       document.body.classList.toggle('reduced-motion', appSettings.animationLevel === 'reduced');
 
       if (!appSettings.showHistory) {
-        historyBox.innerHTML = '<div class="history-empty">History is hidden by settings.</div>';
+        renderHistoryEmptyState('History is hidden by settings.');
       }
 
       setCompareMode(appSettings.compareModeDefault);
     }
 
+    function applyRuntimeModeEffects() {
+      document.body.classList.toggle('demo-only-mode', runtimeDemoMode);
+      questionInput.placeholder = runtimeDemoMode ? DEMO_QUESTION_PLACEHOLDER : DEFAULT_QUESTION_PLACEHOLDER;
+      chatHint.textContent = runtimeDemoMode ? DEMO_CHAT_HINT : DEFAULT_CHAT_HINT;
+      demoRefreshButton.textContent = 'Generate Demo Queries';
+      demoRefreshButton.classList.toggle('hidden', !runtimeDemoMode);
+      demoQueriesRow.classList.toggle('hidden', !runtimeDemoMode);
+      chatSuggestBtn.classList.toggle('hidden', !runtimeDemoMode);
+      if (followUpFilterBar) followUpFilterBar.classList.toggle('hidden', !runtimeDemoMode);
+      if (!runtimeDemoMode) {
+        chatSuggestBox.innerHTML = '';
+        chatSuggestBox.classList.add('hidden');
+        demoQueriesBox.textContent = 'Click "Generate Demo Queries" to load AI-suggested queries.';
+      } else {
+        demoQueriesBox.textContent = 'Click "Generate Demo Queries" to load demo queries for this dataset.';
+      }
+
+      if (runtimeDemoMode) {
+        questionInput.value = '';
+        chatInput.value = '';
+        if (!currentDashboardPayload) {
+          setStatus('Demo mode is active. Choose a demo query to begin.');
+        }
+      } else if (!currentDashboardPayload) {
+        setStatus('Ready.');
+      }
+    }
+
+    async function syncRuntimeModeState() {
+      try {
+        const settings = await fetchJson('/api/settings');
+        runtimeDemoMode = !!settings.demoMode;
+        applyRuntimeModeEffects();
+      } catch (_error) {
+        runtimeDemoMode = false;
+        applyRuntimeModeEffects();
+      }
+    }
+
     function setStatus(message) {
       statusText.textContent = message;
+    }
+
+    function resolveSessionIdForUser() {
+      if (authToken && currentUser && currentUser.id) {
+        return 'user_' + String(currentUser.id);
+      }
+      return 'guest_' + Math.random().toString(36).slice(2, 10);
+    }
+
+    function syncSessionIdWithAuthState() {
+      sessionId = resolveSessionIdForUser();
     }
 
     function downloadTextFile(fileName, content, mimeType = 'text/plain;charset=utf-8') {
@@ -884,8 +1129,7 @@
 
     function renderDatasetProfile() {
       if (!currentSchemaColumns.length) {
-        datasetProfileBadge.textContent = '-';
-        datasetProfileBadge.classList.add('muted');
+        setOptionalBadge(datasetProfileBadge, '');
         datasetProfileBox.textContent = 'Select a dataset to profile columns and sample quality.';
         return;
       }
@@ -905,19 +1149,21 @@
       });
       const nullRatio = Math.round((nullCells / totalCells) * 100);
 
-      datasetProfileBadge.textContent = currentSchemaColumns.length + ' cols';
-      datasetProfileBadge.classList.remove('muted');
-      datasetProfileBox.textContent = [
-        'columns: ' + currentSchemaColumns.length,
-        'numeric: ' + numeric,
-        'temporal: ' + temporal,
-        'categorical: ' + categorical,
-        'sample rows scanned: ' + sampleRows,
-        'sample null ratio: ' + nullRatio + '%',
-        '',
-        'top columns:',
-        currentSchemaColumns.slice(0, 8).map(col => '- ' + col.name + ' (' + col.type + ')').join('\n')
-      ].join('\n');
+      setOptionalBadge(datasetProfileBadge, currentSchemaColumns.length + ' cols', true);
+      datasetProfileBox.innerHTML = [
+        '<div class="profile-grid">',
+        '<div class="profile-item"><span class="profile-item-label">Columns</span><strong>' + currentSchemaColumns.length + '</strong></div>',
+        '<div class="profile-item"><span class="profile-item-label">Numeric</span><strong>' + numeric + '</strong></div>',
+        '<div class="profile-item"><span class="profile-item-label">Temporal</span><strong>' + temporal + '</strong></div>',
+        '<div class="profile-item"><span class="profile-item-label">Categorical</span><strong>' + categorical + '</strong></div>',
+        '<div class="profile-item"><span class="profile-item-label">Sample Rows</span><strong>' + sampleRows + '</strong></div>',
+        '<div class="profile-item"><span class="profile-item-label">Null Ratio</span><strong>' + nullRatio + '%</strong></div>',
+        '</div>',
+        '<div class="profile-section">',
+        '<div class="profile-section-label">Top Columns</div>',
+        '<div class="profile-column-list">' + currentSchemaColumns.slice(0, 8).map(col => '<div class="profile-column-item"><span class="profile-column-name">' + escapeHtml(col.name) + '</span><span class="profile-column-type">' + escapeHtml(col.type) + '</span></div>').join('') + '</div>',
+        '</div>'
+      ].join('');
     }
 
     function buildNarrative(payload) {
@@ -1027,6 +1273,7 @@
       currentDashboardPayload = normalized;
       renderNarrative(normalized || null);
       renderAnomalyHighlights(normalized || null);
+      return normalized;
     }
 
     function chartTypeToJsType(chartType) {
@@ -1172,62 +1419,271 @@
       }
     }
 
-    function updateCompareSelector(payload) {
-      const normalizedPayload = ensureVisualPayload(payload);
-      const options = getCompatibleCharts(normalizedPayload);
-      const previousValue = compareChartSelect.value;
-      compareChartSelect.innerHTML = '';
-      options
-        .filter(type => type !== 'table' && type !== 'ranked_table')
-        .forEach(type => {
-          const opt = document.createElement('option');
-          opt.value = type;
-          opt.textContent = (V3_CHART_LABELS[type] || type.replace(/_/g, ' ')).replace(/&#[^;]+;\s*/g, '');
-          compareChartSelect.appendChild(opt);
-        });
+    function renderCompareTable(payload, mode) {
+      const thead = compareTable.querySelector('thead');
+      const tbody = compareTable.querySelector('tbody');
+      thead.innerHTML = '';
+      tbody.innerHTML = '';
 
-      if (previousValue && Array.from(compareChartSelect.options).some(opt => opt.value === previousValue)) {
-        compareChartSelect.value = previousValue;
-      } else if (compareChartSelect.options.length) {
-        const fallback = options.find(type => type !== (normalizedPayload.chart_type || normalizedPayload.recommended_chart) && type !== 'table' && type !== 'ranked_table');
-        compareChartSelect.value = fallback || compareChartSelect.options[0].value;
+      const rows = Array.isArray(payload.result_rows) ? [...payload.result_rows] : [];
+      const columns = Array.isArray(payload.result_columns) ? payload.result_columns : [];
+      if (!columns.length) {
+        compareTableWrap.classList.add('hidden');
+        return;
       }
+
+      if (mode === 'ranked_table') {
+        const numericCol = columns.find(column => rows.some(row => isNumericLike(row[column])));
+        if (numericCol) {
+          rows.sort((a, b) => {
+            const aVal = toNumberOrNaN(a[numericCol]);
+            const bVal = toNumberOrNaN(b[numericCol]);
+            return (Number.isFinite(bVal) ? bVal : -Infinity) - (Number.isFinite(aVal) ? aVal : -Infinity);
+          });
+        }
+      }
+
+      const headRow = document.createElement('tr');
+      columns.forEach(column => {
+        const th = document.createElement('th');
+        th.textContent = column;
+        headRow.appendChild(th);
+      });
+      thead.appendChild(headRow);
+
+      rows.slice(0, 120).forEach(row => {
+        const tr = document.createElement('tr');
+        columns.forEach(column => {
+          const td = document.createElement('td');
+          const value = row[column];
+          td.textContent = value == null ? '' : value;
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+
+      compareTableWrap.classList.remove('hidden');
     }
 
-    function renderCompareChart(payload) {
+    function buildCompareSeries(payload, compareType) {
       const normalizedPayload = ensureVisualPayload(payload);
-      if (!compareModeEnabled || !normalizedPayload || !normalizedPayload.chart_data) {
-        chartCard.classList.remove('compare-active');
-        compareWrap.classList.remove('compare-visible');
-        compareWrap.classList.add('hidden');
-        destroyCompareChart();
-        return;
-      }
-
-      updateCompareSelector(normalizedPayload);
-      const compareType = compareChartSelect.value;
-      if (!compareType) {
-        chartCard.classList.remove('compare-active');
-        compareWrap.classList.remove('compare-visible');
-        compareWrap.classList.add('hidden');
-        destroyCompareChart();
-        return;
-      }
-
+      const rows = Array.isArray(normalizedPayload.result_rows) ? normalizedPayload.result_rows : [];
+      const columns = Array.isArray(normalizedPayload.result_columns) ? normalizedPayload.result_columns : [];
+      const numericCols = columns.filter(column => rows.some(row => isNumericLike(row[column])));
+      const settings = getWhatIfSettings();
       const chartJsType = chartTypeToJsType(compareType);
+      const COMPARE_BLUE = '#2563EB';
+      const COMPARE_BLUE_ALPHA = 'rgba(37,99,235,0.35)';
+      const COMPARE_GREEN = '#16A34A';
+      const COMPARE_GREEN_ALPHA = 'rgba(22,163,74,0.35)';
+
+      const candidateGroupCol = columns.find(column => {
+        if (numericCols.includes(column)) return false;
+        const unique = new Set(
+          rows
+            .map(row => String(row[column] ?? '').trim())
+            .filter(Boolean)
+        );
+        return unique.size === 2;
+      });
+
+      if (compareType === 'scatter_plot' && numericCols.length >= 2) {
+        const points = rows
+          .map(row => ({
+            x: applyWhatIfValue(toNumberOrNaN(row[numericCols[0]]), settings),
+            y: applyWhatIfValue(toNumberOrNaN(row[numericCols[1]]), settings),
+            group: candidateGroupCol ? (String(row[candidateGroupCol] ?? '').trim() || 'Uncategorized') : null
+          }))
+          .filter(point => Number.isFinite(point.x) && Number.isFinite(point.y));
+        if (!points.length) return null;
+        const datasets = [];
+
+        if (candidateGroupCol) {
+          const groupNames = Array.from(new Set(points.map(point => point.group).filter(Boolean)));
+          if (groupNames.length === 2) {
+            const first = groupNames[0];
+            const second = groupNames[1];
+            const firstPoints = points.filter(point => point.group === first).map(({ x, y }) => ({ x, y }));
+            const secondPoints = points.filter(point => point.group === second).map(({ x, y }) => ({ x, y }));
+            if (firstPoints.length) {
+              datasets.push({
+                label: String(first),
+                data: firstPoints,
+                backgroundColor: COMPARE_BLUE_ALPHA,
+                borderColor: COMPARE_BLUE,
+                pointRadius: 5,
+                pointHoverRadius: 7
+              });
+            }
+            if (secondPoints.length) {
+              datasets.push({
+                label: String(second),
+                data: secondPoints,
+                backgroundColor: COMPARE_GREEN_ALPHA,
+                borderColor: COMPARE_GREEN,
+                pointRadius: 5,
+                pointHoverRadius: 7
+              });
+            }
+          }
+        }
+
+        if (!datasets.length) {
+          datasets.push({
+            label: numericCols[0] + ' vs ' + numericCols[1],
+            data: points.map(({ x, y }) => ({ x, y })),
+            backgroundColor: COMPARE_BLUE_ALPHA,
+            borderColor: COMPARE_BLUE,
+            pointRadius: 5,
+            pointHoverRadius: 7
+          });
+        }
+
+        return {
+          chartJsType,
+          data: {
+            datasets
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: { duration: 780, easing: 'easeOutCubic' },
+            plugins: {
+              legend: {
+                display: true,
+                labels: {
+                  color: '#94A3B8',
+                  font: { family: 'Space Grotesk, sans-serif', size: 11 }
+                }
+              },
+              tooltip: {
+                backgroundColor: 'rgba(15,23,42,0.96)',
+                titleColor: '#F8FAFC',
+                bodyColor: '#E2E8F0'
+              }
+            },
+            scales: {
+              x: {
+                type: 'linear',
+                ticks: { color: '#94A3B8', callback: value => formatNumber(value) },
+                grid: { color: 'rgba(148,163,184,0.15)' },
+                title: { display: true, text: numericCols[0], color: '#94A3B8' }
+              },
+              y: {
+                type: 'linear',
+                ticks: { color: '#94A3B8', callback: value => formatNumber(value) },
+                grid: { color: 'rgba(148,163,184,0.15)' },
+                title: { display: true, text: numericCols[1], color: '#94A3B8' }
+              }
+            }
+          }
+        };
+      }
+
+      if (compareType === 'bubble_chart' && numericCols.length >= 2) {
+        const radiusCol = numericCols[2] || numericCols[1];
+        const points = rows
+          .map(row => {
+            const x = applyWhatIfValue(toNumberOrNaN(row[numericCols[0]]), settings);
+            const y = applyWhatIfValue(toNumberOrNaN(row[numericCols[1]]), settings);
+            const rRaw = applyWhatIfValue(toNumberOrNaN(row[radiusCol]), settings);
+            const r = Math.max(4, Math.min(18, (Number.isFinite(rRaw) ? Math.abs(rRaw) : 0) / 10 || 7));
+            return {
+              x,
+              y,
+              r,
+              group: candidateGroupCol ? (String(row[candidateGroupCol] ?? '').trim() || 'Uncategorized') : null
+            };
+          })
+          .filter(point => Number.isFinite(point.x) && Number.isFinite(point.y));
+        if (!points.length) return null;
+        const datasets = [];
+
+        if (candidateGroupCol) {
+          const groupNames = Array.from(new Set(points.map(point => point.group).filter(Boolean)));
+          if (groupNames.length === 2) {
+            const first = groupNames[0];
+            const second = groupNames[1];
+            const firstPoints = points.filter(point => point.group === first).map(({ x, y, r }) => ({ x, y, r }));
+            const secondPoints = points.filter(point => point.group === second).map(({ x, y, r }) => ({ x, y, r }));
+            if (firstPoints.length) {
+              datasets.push({
+                label: String(first),
+                data: firstPoints,
+                backgroundColor: COMPARE_BLUE_ALPHA,
+                borderColor: COMPARE_BLUE,
+                borderWidth: 2
+              });
+            }
+            if (secondPoints.length) {
+              datasets.push({
+                label: String(second),
+                data: secondPoints,
+                backgroundColor: COMPARE_GREEN_ALPHA,
+                borderColor: COMPARE_GREEN,
+                borderWidth: 2
+              });
+            }
+          }
+        }
+
+        if (!datasets.length) {
+          datasets.push({
+            label: numericCols[0] + ' / ' + numericCols[1],
+            data: points.map(({ x, y, r }) => ({ x, y, r })),
+            backgroundColor: COMPARE_BLUE_ALPHA,
+            borderColor: COMPARE_BLUE,
+            borderWidth: 2
+          });
+        }
+
+        return {
+          chartJsType,
+          data: {
+            datasets
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: { duration: 780, easing: 'easeOutCubic' },
+            plugins: {
+              legend: {
+                display: true,
+                labels: {
+                  color: '#94A3B8',
+                  font: { family: 'Space Grotesk, sans-serif', size: 11 }
+                }
+              },
+              tooltip: {
+                backgroundColor: 'rgba(15,23,42,0.96)',
+                titleColor: '#F8FAFC',
+                bodyColor: '#E2E8F0'
+              }
+            },
+            scales: {
+              x: {
+                type: 'linear',
+                ticks: { color: '#94A3B8', callback: value => formatNumber(value) },
+                grid: { color: 'rgba(148,163,184,0.15)' },
+                title: { display: true, text: numericCols[0], color: '#94A3B8' }
+              },
+              y: {
+                type: 'linear',
+                ticks: { color: '#94A3B8', callback: value => formatNumber(value) },
+                grid: { color: 'rgba(148,163,184,0.15)' },
+                title: { display: true, text: numericCols[1], color: '#94A3B8' }
+              }
+            }
+          }
+        };
+      }
+
+      const labels = Array.isArray(normalizedPayload.chart_data.labels) ? normalizedPayload.chart_data.labels : [];
+      const values = (normalizedPayload.chart_data.values || []).map(v => applyWhatIfValue(v, settings));
+      if (!labels.length || !values.length) return null;
+
       const isRadar = chartJsType === 'radar';
       const isPolar = chartJsType === 'polarArea';
-      const labels = Array.isArray(normalizedPayload.chart_data.labels) ? normalizedPayload.chart_data.labels : [];
-      const settings = getWhatIfSettings();
-      const values = (normalizedPayload.chart_data.values || []).map(v => applyWhatIfValue(v, settings));
-      if (!labels.length || !values.length) {
-        chartCard.classList.remove('compare-active');
-        compareWrap.classList.remove('compare-visible');
-        compareWrap.classList.add('hidden');
-        destroyCompareChart();
-        return;
-      }
-
       const data = {
         labels,
         datasets: [{
@@ -1235,15 +1691,17 @@
           data: values,
           backgroundColor: chartJsType === 'pie' || chartJsType === 'doughnut' || chartJsType === 'polarArea'
             ? PALETTE_ALPHA.slice(0, labels.length)
-            : (isRadar ? 'rgba(79,70,229,0.18)' : 'rgba(79,70,229,0.65)'),
-          borderColor: chartJsType === 'pie' || chartJsType === 'doughnut' || chartJsType === 'polarArea' ? '#fff' : '#818cf8',
+            : (isRadar ? 'rgba(37,99,235,0.18)' : COMPARE_BLUE_ALPHA),
+          borderColor: chartJsType === 'pie' || chartJsType === 'doughnut' || chartJsType === 'polarArea'
+            ? '#fff'
+            : COMPARE_GREEN,
           borderWidth: 2,
           fill: compareType === 'area_chart' || isRadar,
           tension: 0.35,
           stepped: compareType === 'step_line_chart',
           pointRadius: chartJsType === 'line' || chartJsType === 'radar' ? 4 : 0,
           pointHoverRadius: chartJsType === 'line' || chartJsType === 'radar' ? 6 : 0,
-          pointBackgroundColor: '#818cf8',
+          pointBackgroundColor: COMPARE_GREEN,
           pointBorderColor: '#ffffff',
           pointBorderWidth: 1.5,
           borderRadius: chartJsType === 'bar' ? 8 : 0,
@@ -1268,7 +1726,7 @@
             backgroundColor: 'rgba(15,23,42,0.96)',
             titleColor: '#F8FAFC',
             bodyColor: '#E2E8F0',
-            borderColor: 'rgba(79,70,229,0.35)',
+            borderColor: 'rgba(37,99,235,0.35)',
             borderWidth: 1,
             callbacks: {
               label(ctx) {
@@ -1288,16 +1746,131 @@
               })
       };
 
+      return { chartJsType, data, options };
+    }
+
+    function canRenderCompareType(payload, type) {
+      const normalizedPayload = ensureVisualPayload(payload);
+      if (!normalizedPayload || !type) return false;
+
+      const rows = Array.isArray(normalizedPayload.result_rows) ? normalizedPayload.result_rows : [];
+      const columns = Array.isArray(normalizedPayload.result_columns) ? normalizedPayload.result_columns : [];
+      const hasTableData = columns.length > 0 && rows.length > 0;
+
+      if (type === 'table' || type === 'ranked_table') {
+        return hasTableData;
+      }
+
+      const hasChartData = !!(
+        normalizedPayload.chart_data &&
+        Array.isArray(normalizedPayload.chart_data.labels) &&
+        Array.isArray(normalizedPayload.chart_data.values) &&
+        normalizedPayload.chart_data.labels.length > 0 &&
+        normalizedPayload.chart_data.values.length > 0
+      );
+
+      if (!hasChartData) return false;
+
+      if (type === 'scatter_plot' || type === 'bubble_chart') {
+        const numericCols = columns.filter(column => rows.some(row => isNumericLike(row[column])));
+        return numericCols.length >= 2;
+      }
+
+      return true;
+    }
+
+    function updateCompareSelector(payload) {
+      const normalizedPayload = ensureVisualPayload(payload);
+      const options = getCompatibleCharts(normalizedPayload);
+      const compareOptions = options.filter(type => canRenderCompareType(normalizedPayload, type));
+      const previousValue = compareChartSelect.value;
+      compareChartSelect.innerHTML = '';
+      compareOptions.forEach(type => {
+        const opt = document.createElement('option');
+        opt.value = type;
+        opt.textContent = (V3_CHART_LABELS[type] || type.replace(/_/g, ' ')).replace(/&#[^;]+;\s*/g, '');
+        compareChartSelect.appendChild(opt);
+      });
+
+      if (previousValue && Array.from(compareChartSelect.options).some(opt => opt.value === previousValue)) {
+        compareChartSelect.value = previousValue;
+      } else if (compareChartSelect.options.length) {
+        const fallback = compareOptions.find(type => type !== (normalizedPayload.chart_type || normalizedPayload.recommended_chart));
+        compareChartSelect.value = fallback || compareChartSelect.options[0].value;
+      }
+    }
+
+    function renderCompareChart(payload) {
+      const normalizedPayload = ensureVisualPayload(payload);
+      if (!compareModeEnabled || !normalizedPayload) {
+        chartCard.classList.remove('compare-active');
+        compareWrap.classList.remove('compare-visible');
+        compareWrap.classList.add('hidden');
+        destroyCompareChart();
+        compareTableWrap.classList.add('hidden');
+        return;
+      }
+
+      updateCompareSelector(normalizedPayload);
+      const compareType = compareChartSelect.value;
+      if (!compareType || !canRenderCompareType(normalizedPayload, compareType)) {
+        chartCard.classList.remove('compare-active');
+        compareWrap.classList.remove('compare-visible');
+        compareWrap.classList.add('hidden');
+        destroyCompareChart();
+        compareTableWrap.classList.add('hidden');
+        return;
+      }
+
+      if (compareType === 'table' || compareType === 'ranked_table') {
+        destroyCompareChart();
+        compareCanvasWrap.classList.add('hidden');
+        renderCompareTable(normalizedPayload, compareType);
+        chartCard.classList.add('compare-active');
+        compareWrap.classList.remove('hidden');
+        requestAnimationFrame(() => compareWrap.classList.add('compare-visible'));
+        return;
+      }
+
+      compareTableWrap.classList.add('hidden');
+      compareCanvasWrap.classList.remove('hidden');
+
+      const compareSeries = buildCompareSeries(normalizedPayload, compareType);
+      if (!compareSeries) {
+        chartCard.classList.remove('compare-active');
+        compareWrap.classList.remove('compare-visible');
+        compareWrap.classList.add('hidden');
+        destroyCompareChart();
+        compareTableWrap.classList.add('hidden');
+        return;
+      }
+
       chartCard.classList.add('compare-active');
       compareWrap.classList.remove('hidden');
       requestAnimationFrame(() => compareWrap.classList.add('compare-visible'));
       if (compareChart) {
-        compareChart.config.type = chartJsType;
-        compareChart.data = data;
-        compareChart.options = options;
+        compareChart.config.type = compareSeries.chartJsType;
+        compareChart.data = compareSeries.data;
+        compareChart.options = compareSeries.options;
         compareChart.update();
       } else {
-        compareChart = new Chart(compareCanvas.getContext('2d'), { type: chartJsType, data, options });
+        compareChart = new Chart(compareCanvas.getContext('2d'), {
+          type: compareSeries.chartJsType,
+          data: compareSeries.data,
+          options: compareSeries.options
+        });
+      }
+    }
+
+    function stepCompareOption(direction) {
+      const options = Array.from(compareChartSelect.options);
+      if (!options.length) return;
+      const currentIndex = options.findIndex(option => option.value === compareChartSelect.value);
+      const startIndex = currentIndex >= 0 ? currentIndex : 0;
+      const nextIndex = (startIndex + direction + options.length) % options.length;
+      compareChartSelect.value = options[nextIndex].value;
+      if (currentDashboardPayload) {
+        renderCompareChart(currentDashboardPayload);
       }
     }
 
@@ -1319,6 +1892,7 @@
       if (!SpeechRecognition) {
         voiceAskBtn.disabled = true;
         voiceAskBtn.textContent = 'Voice N/A';
+        voiceAskControls.classList.add('hidden');
         return;
       }
 
@@ -1329,21 +1903,27 @@
 
       speechRecognitionInstance.onstart = () => {
         isVoiceListening = true;
-        voiceAskBtn.classList.add('active');
-        voiceAskBtn.textContent = 'Listening...';
+        voiceCancelRequested = false;
+        voiceInputSnapshot = questionInput.value;
+        updateVoiceAskUi();
         setStatus('Voice input is listening...');
       };
       speechRecognitionInstance.onresult = event => {
         const text = Array.from(event.results).map(r => r[0].transcript).join(' ').trim();
         if (text) questionInput.value = text;
       };
-      speechRecognitionInstance.onerror = () => {
+      speechRecognitionInstance.onerror = event => {
+        if (event && event.error === 'aborted') return;
         setStatus('Voice input error. Try again.');
       };
       speechRecognitionInstance.onend = () => {
+        if (voiceCancelRequested) {
+          questionInput.value = voiceInputSnapshot;
+          voiceCancelRequested = false;
+          setStatus('Voice input canceled.');
+        }
         isVoiceListening = false;
-        voiceAskBtn.classList.remove('active');
-        voiceAskBtn.textContent = 'Voice Ask';
+        updateVoiceAskUi();
       };
     }
 
@@ -1353,6 +1933,22 @@
         speechRecognitionInstance.stop();
       } else {
         speechRecognitionInstance.start();
+      }
+    }
+
+    function finishVoiceAsk() {
+      if (!speechRecognitionInstance || !isVoiceListening) return;
+      speechRecognitionInstance.stop();
+      setStatus('Voice input captured.');
+    }
+
+    function cancelVoiceAsk() {
+      if (!speechRecognitionInstance || !isVoiceListening) return;
+      voiceCancelRequested = true;
+      if (typeof speechRecognitionInstance.abort === 'function') {
+        speechRecognitionInstance.abort();
+      } else {
+        speechRecognitionInstance.stop();
       }
     }
 
@@ -1368,8 +1964,8 @@
       startNarrativeSpeech();
     }
 
-    function updateNarrativeSpeedButton() {
-      speedNarrativeBtn.textContent = 'Speed ' + narrativeSpeechRate.toFixed(2).replace(/\.00$/, '') + 'x';
+    function updateNarrativeSpeedControl() {
+      speedNarrativeSelect.value = String(narrativeSpeechRate);
     }
 
     function updateNarrativeSpeechUi() {
@@ -1377,7 +1973,7 @@
       speakNarrativeBtn.textContent = isNarrativeSpeaking ? 'Stop' : 'Speak';
       pauseNarrativeBtn.textContent = isNarrativePaused ? 'Resume' : 'Pause';
       pauseNarrativeBtn.disabled = !isNarrativeSpeaking;
-      updateNarrativeSpeedButton();
+      updateNarrativeSpeedControl();
     }
 
     function startNarrativeSpeech() {
@@ -1441,17 +2037,14 @@
       updateNarrativeSpeechUi();
     }
 
-    function cycleNarrativeSpeed() {
-      const idx = NARRATIVE_SPEECH_RATES.indexOf(narrativeSpeechRate);
-      const nextIdx = idx === -1 ? 0 : (idx + 1) % NARRATIVE_SPEECH_RATES.length;
-      narrativeSpeechRate = NARRATIVE_SPEECH_RATES[nextIdx];
-      updateNarrativeSpeedButton();
-
-      if (isNarrativeSpeaking && currentNarrativeUtterance) {
-        narrativeRestartRequested = true;
-        window.speechSynthesis.cancel();
-        setStatus('Narration speed changed to ' + narrativeSpeechRate.toFixed(2).replace(/\.00$/, '') + 'x.');
+    function handleNarrativeSpeedChange() {
+      const selectedRate = Number(speedNarrativeSelect.value);
+      if (!NARRATIVE_SPEECH_RATES.includes(selectedRate)) return;
+      narrativeSpeechRate = selectedRate;
+      if (currentNarrativeUtterance) {
+        currentNarrativeUtterance.rate = narrativeSpeechRate;
       }
+      setStatus('Narration speed set to ' + formatNarrativeSpeed(narrativeSpeechRate) + '.');
     }
 
     async function copySqlText() {
@@ -1471,15 +2064,6 @@
     }
 
     function initMergedVisualEffects() {
-      // Startup overlay — mirrors index2's exact approach
-      const overlay = document.getElementById('startup-overlay');
-      if (overlay) {
-        setTimeout(() => {
-          overlay.style.opacity = '0';
-          setTimeout(() => overlay.remove(), 800);
-        }, 1000);
-      }
-
       // Scroll-reveal on panels and cards
       const revealTargets = document.querySelectorAll('.brand-hero, .panel, .card');
       revealTargets.forEach(el => el.classList.add('reveal-on-scroll'));
@@ -1494,6 +2078,46 @@
       }, { threshold: 0.07 });
 
       revealTargets.forEach(el => observer.observe(el));
+    }
+
+    function resetDashboardState() {
+      stopNarrativeSpeech();
+      currentDashboardPayload = null;
+      lastV3Result = null;
+      currentNarrativeText = '';
+      intentBox.textContent = '-';
+      validationBox.textContent = '-';
+      sqlBox.textContent = 'No SQL yet.';
+      setOptionalBadge(modeBox, '', true);
+      explanationBox.textContent = 'No explanation yet.';
+      setOptionalBadge(chartTypeBox, '');
+      insightBox.textContent = authToken && currentUser
+        ? 'Run a query to see AI-generated insights.'
+        : 'Sign in and run a query to see AI-generated insights.';
+      insightBox.classList.remove('has-insight');
+      setOptionalBadge(dataStructureBadge, '', true);
+      chartOptionsRow.innerHTML = '';
+      chartOptionsRow.classList.add('hidden');
+      chartOptionsMeta.textContent = 'Compatible views for this result';
+      chartOptionsMeta.classList.add('hidden');
+      questionInput.value = '';
+      chatInput.value = '';
+      renderHistoryEmptyState(getConversationMemoryMessage());
+      renderTable([], []);
+      renderNarrative(null);
+      renderAnomalyHighlights(null);
+      resetChatFlow();
+      destroyChart();
+      destroyCompareChart();
+      compareWrap.classList.add('hidden');
+      chartCard.classList.remove('compare-active', 'result-ready', 'viz-pop-in');
+      chartWrap.classList.remove('loading', 'result-ready', 'viz-pop-in');
+      chartFallback.textContent = 'Run a query to render chart.';
+      chartFallback.style.display = 'grid';
+      chartCanvas.style.display = 'none';
+      resultMeta.textContent = '0 rows';
+      resetPipelineProgressVisual();
+      applyRuntimeModeEffects();
     }
 
     function exportChartPng() {
@@ -1551,6 +2175,57 @@
       setStatus('Narrative report exported.');
     }
 
+    async function downloadAnalysisReport() {
+      if (!currentDashboardPayload || !currentDashboardPayload.sql_query) {
+        setStatus('Run a query before downloading the report.');
+        return;
+      }
+
+      downloadReportBtn.disabled = true;
+      setStatus('Generating report for the current query...');
+      try {
+        const response = await fetch('/generate-report', {
+          method: 'POST',
+          headers: buildRequestContextHeaders({ 'Content-Type': 'application/json' }),
+          body: JSON.stringify({
+            sessionId,
+            question: questionInput.value.trim() || 'Current business question',
+            fileName: currentDashboardPayload.file_name || fileSelect.value || '',
+            payload: currentDashboardPayload,
+            narrative: currentNarrativeText || buildNarrative(currentDashboardPayload),
+            insight: currentDashboardPayload.insight || '',
+            chartImage: chart && chart.toBase64Image ? chart.toBase64Image('image/png', 1) : ''
+          })
+        });
+
+        if (!response.ok) {
+          let message = 'Could not generate report.';
+          try {
+            const errorPayload = await response.json();
+            message = errorPayload.error || message;
+          } catch (_ignored) {
+            message = 'Could not generate report.';
+          }
+          throw new Error(message);
+        }
+
+        const blob = await response.blob();
+        const reportUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = reportUrl;
+        link.download = 'current-query-report.pdf';
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(reportUrl);
+        setStatus('Current query report downloaded.');
+      } catch (error) {
+        setStatus(error.message || 'Could not download report.');
+      } finally {
+        downloadReportBtn.disabled = false;
+      }
+    }
+
     function formatValidationDetails(payload) {
       const lines = [];
       const status = payload.validation_status || 'executed';
@@ -1565,9 +2240,9 @@
       if (Array.isArray(payload.validation_trace) && payload.validation_trace.length) {
         lines.push('');
         lines.push('pipeline trace:');
-        payload.validation_trace.forEach((step, index) => {
+        payload.validation_trace.forEach(step => {
           const mark = step.status === 'error' ? 'x' : '✓';
-          lines.push((index + 1) + '. [' + mark + '] ' + (step.stage || 'step') + ' - ' + (step.message || 'done'));
+          lines.push('[' + mark + '] ' + (step.stage || 'step') + ' - ' + (step.message || 'done'));
         });
       }
 
@@ -1593,7 +2268,7 @@
       el.innerHTML =
         '<div class="hover-chart-preview-title" id="chatHoverPreviewTitle"></div>' +
         '<div class="hover-chart-preview-canvas-wrap" id="chatHoverPreviewCanvasWrap">' +
-        '<canvas id="chatHoverPreviewCanvas" width="220" height="130"></canvas>' +
+        '<canvas id="chatHoverPreviewCanvas" width="260" height="170"></canvas>' +
         '</div>';
       document.body.appendChild(el);
       return el;
@@ -1618,78 +2293,90 @@
     }
 
     function buildHoverPreviewConfig(resultPayload, chartType) {
-      const rows = Array.isArray(resultPayload.result_rows) ? resultPayload.result_rows : [];
-      const columns = Array.isArray(resultPayload.result_columns) ? resultPayload.result_columns : [];
-      const numericCols = columns.filter(column => rows.some(row => typeof row[column] === 'number'));
-      const d = resultPayload.chart_data;
+      const normalizedPayload = ensureVisualPayload(resultPayload);
+      const rows = Array.isArray(normalizedPayload.result_rows) ? normalizedPayload.result_rows : [];
+      const columns = Array.isArray(normalizedPayload.result_columns) ? normalizedPayload.result_columns : [];
+      const numericCols = columns.filter(column => rows.some(row => isNumericLike(row[column])));
+      const d = normalizedPayload.chart_data || {};
 
-      if (!d || !Array.isArray(d.labels) || !d.labels.length) return null;
+      if (!Array.isArray(d.labels) || !d.labels.length) return null;
       if (chartType === 'table' || chartType === 'ranked_table') return null;
 
-      const map = {
-        bar_chart: 'bar',
-        horizontal_bar_chart: 'bar',
-        line_chart: 'line',
-        area_chart: 'line',
-        step_line_chart: 'line',
-        pie_chart: 'pie',
-        donut_chart: 'doughnut',
-        radar_chart: 'radar',
-        polar_area_chart: 'polarArea',
-        scatter_plot: 'scatter',
-        bubble_chart: 'bubble',
-        lollipop_chart: 'bar'
-      };
-
-      const chartJsType = map[chartType] || 'bar';
+      const chartJsType = chartTypeToJsType(chartType);
       const isHorizontal = chartType === 'horizontal_bar_chart';
+      const isRadar = chartJsType === 'radar';
+      const isPolar = chartJsType === 'polarArea';
       const isScatter = chartType === 'scatter_plot';
       const isBubble = chartType === 'bubble_chart';
       const isPieFamily = chartJsType === 'pie' || chartJsType === 'doughnut' || chartJsType === 'polarArea';
+      const isLollipop = chartType === 'lollipop_chart';
+      const labelColumn = columns.find(column => !numericCols.includes(column)) || columns[0];
+
+      const limitedRows = rows.slice(0, 80);
+      const limitedLabels = (d.labels || []).slice(0, 16);
+      const limitedValues = (d.values || []).slice(0, 16).map(v => {
+        const n = toNumberOrNaN(v);
+        return Number.isFinite(n) ? n : 0;
+      });
 
       let data;
       if (isScatter && numericCols.length >= 2) {
         data = {
           datasets: [{
-            data: rows.slice(0, 50).map(row => ({
-              x: Number(row[numericCols[0]]) || 0,
-              y: Number(row[numericCols[1]]) || 0
-            })),
-            backgroundColor: 'rgba(196,69,54,0.7)',
-            borderColor: '#c44536',
-            pointRadius: 3
+            label: numericCols[0] + ' vs ' + numericCols[1],
+            data: limitedRows
+              .map(row => ({
+                x: toNumberOrNaN(row[numericCols[0]]),
+                y: toNumberOrNaN(row[numericCols[1]])
+              }))
+              .filter(point => Number.isFinite(point.x) && Number.isFinite(point.y)),
+            backgroundColor: PALETTE_ALPHA[0],
+            borderColor: PALETTE[0],
+            pointRadius: 4,
+            pointHoverRadius: 6
           }]
         };
       } else if (isBubble && numericCols.length >= 2) {
         const radiusCol = numericCols[2] || numericCols[1];
         data = {
           datasets: [{
-            data: rows.slice(0, 40).map(row => ({
-              x: Number(row[numericCols[0]]) || 0,
-              y: Number(row[numericCols[1]]) || 0,
-              r: Math.max(3, Math.min(12, (Number(row[radiusCol]) || 0) / 12 || 6))
-            })),
-            backgroundColor: 'rgba(229,142,38,0.6)',
-            borderColor: '#e58e26',
-            borderWidth: 1
+            label: numericCols[0] + ' / ' + numericCols[1],
+            data: limitedRows
+              .map(row => ({
+                x: toNumberOrNaN(row[numericCols[0]]),
+                y: toNumberOrNaN(row[numericCols[1]]),
+                r: Math.max(5, Math.min(18, (toNumberOrNaN(row[radiusCol]) || 0) / 10 || 8))
+              }))
+              .filter(point => Number.isFinite(point.x) && Number.isFinite(point.y)),
+            backgroundColor: PALETTE_ALPHA[1],
+            borderColor: PALETTE[1],
+            borderWidth: 2
           }]
         };
       } else {
         data = {
-          labels: d.labels.slice(0, 12),
+          labels: limitedLabels,
           datasets: [{
-            data: (d.values || []).slice(0, 12),
+            label: d.value_field || 'Value',
+            data: limitedValues,
             backgroundColor: isPieFamily
-              ? ['rgba(196,69,54,0.74)', 'rgba(229,142,38,0.74)', 'rgba(74,144,217,0.74)', 'rgba(120,184,75,0.74)', 'rgba(156,90,176,0.74)', 'rgba(224,110,56,0.74)', 'rgba(59,163,179,0.74)', 'rgba(212,160,53,0.74)']
-              : 'rgba(196,69,54,0.72)',
-            borderColor: isPieFamily ? '#fff6ea' : '#c44536',
-            borderWidth: isPieFamily ? 2 : 1.5,
-            fill: chartType === 'area_chart',
+              ? PALETTE_ALPHA.slice(0, limitedLabels.length)
+              : (isRadar ? 'rgba(79,70,229,0.18)' : PALETTE_ALPHA[0]),
+            borderColor: isPieFamily ? '#ffffff' : PALETTE[0],
+            borderWidth: isPieFamily ? 3 : 2,
+            fill: chartType === 'area_chart'
+              ? { target: 'origin', above: 'rgba(79,70,229,0.14)' }
+              : isRadar,
             tension: 0.35,
             stepped: chartType === 'step_line_chart',
-            pointRadius: chartJsType === 'line' ? 2.2 : 0,
-            borderRadius: chartJsType === 'bar' ? 6 : 0,
-            barThickness: chartType === 'lollipop_chart' ? 8 : undefined
+            pointRadius: (chartJsType === 'line' || isLollipop || isRadar) ? 4 : 0,
+            pointHoverRadius: (chartJsType === 'line' || isLollipop || isRadar) ? 6 : 0,
+            pointBackgroundColor: PALETTE[0],
+            pointBorderColor: '#fff',
+            pointBorderWidth: 1.5,
+            borderRadius: chartJsType === 'bar' ? 8 : 0,
+            borderSkipped: false,
+            barThickness: isLollipop ? 8 : undefined
           }]
         };
       }
@@ -1699,29 +2386,65 @@
         data,
         options: {
           responsive: false,
+          maintainAspectRatio: false,
           animation: {
-            duration: 320,
+            duration: 420,
             easing: 'easeOutCubic'
           },
-          maintainAspectRatio: false,
           indexAxis: isHorizontal ? 'y' : 'x',
           plugins: {
-            legend: { display: false },
-            tooltip: { enabled: false }
-          },
-          scales: (isPieFamily || chartJsType === 'radar') ? {} : {
-            x: {
-              type: (isScatter || isBubble) ? 'linear' : 'category',
-              ticks: { display: false },
-              grid: { display: false },
-              border: { display: false }
+            legend: {
+              display: isPieFamily || isRadar,
+              labels: {
+                color: '#94A3B8',
+                font: { family: 'Space Grotesk, sans-serif', size: 10 },
+                usePointStyle: true,
+                padding: 10
+              }
             },
-            y: {
-              ticks: { display: false },
-              grid: { display: false },
-              border: { display: false }
+            tooltip: {
+              backgroundColor: 'rgba(15,23,42,0.96)',
+              titleColor: '#F8FAFC',
+              bodyColor: '#E2E8F0',
+              cornerRadius: 10,
+              padding: 10,
+              borderColor: 'rgba(79,70,229,0.35)',
+              borderWidth: 1
             }
-          }
+          },
+          scales: !(isPieFamily && !isPolar)
+            ? ((isRadar || isPolar)
+              ? getRadialScaleOptions(isRadar)
+              : {
+                  x: {
+                    type: (isScatter || isBubble) ? 'linear' : 'category',
+                    ticks: {
+                      display: !isScatter && !isBubble,
+                      color: '#94A3B8',
+                      font: { family: 'Space Grotesk, sans-serif', size: 9 },
+                      maxRotation: 30
+                    },
+                    title: (isScatter || isBubble)
+                      ? { display: true, text: numericCols[0] || labelColumn || 'X', color: '#94A3B8', font: { size: 9 } }
+                      : undefined,
+                    grid: { color: 'rgba(148,163,184,0.12)' },
+                    border: { color: 'rgba(148,163,184,0.2)' }
+                  },
+                  y: {
+                    ticks: {
+                      color: '#94A3B8',
+                      display: true,
+                      font: { family: 'Space Grotesk, sans-serif', size: 9 },
+                      callback: value => formatNumber(value)
+                    },
+                    title: (isScatter || isBubble)
+                      ? { display: true, text: numericCols[1] || d.value_field || 'Y', color: '#94A3B8', font: { size: 9 } }
+                      : undefined,
+                    grid: { color: 'rgba(148,163,184,0.12)' },
+                    border: { color: 'rgba(148,163,184,0.2)' }
+                  }
+                })
+            : {}
         }
       };
     }
@@ -1744,7 +2467,7 @@
         canvasWrap.textContent = 'No chart preview for this view';
       } else {
         canvasWrap.classList.remove('empty');
-        canvasWrap.innerHTML = '<canvas id="chatHoverPreviewCanvas" width="220" height="130"></canvas>';
+        canvasWrap.innerHTML = '<canvas id="chatHoverPreviewCanvas" width="260" height="170"></canvas>';
         const freshCanvas = document.getElementById('chatHoverPreviewCanvas');
         hoverPreviewChart = new Chart(freshCanvas.getContext('2d'), config);
       }
@@ -1760,18 +2483,28 @@
       destroyHoverPreviewChart();
     }
 
-    function attachChartPillPreview(chartPill, resultPayload, chartType) {
-      chartPill.classList.add('chat-result-pill-chart');
-      chartPill.removeAttribute('title');
-      chartPill.addEventListener('mouseenter', event => {
-        showHoverChartPreview(event, resultPayload, chartType);
-      });
-      chartPill.addEventListener('mousemove', event => {
+    function bindHoverChartPreview(targetEl, payloadSource, chartType) {
+      if (!targetEl) return;
+      targetEl.classList.add('chat-result-pill-chart');
+      targetEl.removeAttribute('title');
+
+      const show = event => {
+        const payload = typeof payloadSource === 'function' ? payloadSource() : payloadSource;
+        if (!payload) return;
+        showHoverChartPreview(event, payload, chartType);
+      };
+
+      targetEl.addEventListener('mouseenter', show);
+      targetEl.addEventListener('mousemove', event => {
         positionHoverPreview(event);
       });
-      chartPill.addEventListener('mouseleave', () => {
+      targetEl.addEventListener('mouseleave', () => {
         hideHoverChartPreview();
       });
+    }
+
+    function attachChartPillPreview(chartPill, resultPayload, chartType) {
+      bindHoverChartPreview(chartPill, resultPayload, chartType);
     }
 
     function toCalmMessage(error, context = 'general') {
@@ -1814,7 +2547,9 @@
       thead.innerHTML = '';
       tbody.innerHTML = '<tr><td style="color:var(--soft);padding:12px">Loading preview...</td></tr>';
       try {
-        const payload = await fetchJson('/api/preview?file=' + encodeURIComponent(fileName));
+        const payload = await fetchJson('/api/preview?file=' + encodeURIComponent(fileName) + '&sessionId=' + encodeURIComponent(sessionId), {
+          headers: buildRequestContextHeaders()
+        });
         currentPreviewRows = Array.isArray(payload.rows) ? payload.rows : [];
         thead.innerHTML = '';
         tbody.innerHTML = '';
@@ -1885,11 +2620,16 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(adminPayload)
         });
+        runtimeDemoMode = !!result.demoMode;
+        applyRuntimeModeEffects();
         keyStatus.textContent = result.configured ? ('Saved. Active key: ' + result.masked) : 'Saved. Demo fallback is active.';
         keyStatus.className = 'key-status ok';
         apiKeyInput.value = '';
         if (currentDashboardPayload) {
-          const preferredPayload = applyPreferredChartSetting(currentDashboardPayload);
+          const preferredPayload = applyPreferredChartSetting({
+            ...currentDashboardPayload,
+            user_selected_chart: false
+          });
           currentDashboardPayload = preferredPayload;
           renderChart(preferredPayload);
           renderTable(preferredPayload.result_columns, preferredPayload.result_rows);
@@ -1916,11 +2656,15 @@
         try {
           authToken = savedToken;
           currentUser = JSON.parse(savedUser);
+          syncSessionIdWithAuthState();
           updateAuthUI();
         } catch (_) {
           localStorage.removeItem('bi_jwt_token');
           localStorage.removeItem('bi_user');
+          syncSessionIdWithAuthState();
         }
+      } else {
+        syncSessionIdWithAuthState();
       }
     }
 
@@ -1938,107 +2682,11 @@
         insightBox.textContent = 'Sign in and run a query to see AI-generated insights.';
         insightBox.classList.remove('has-insight');
       }
+      if (appSettings.showHistory) loadHistory();
+      loadFiles(fileSelect.value || '');
     }
 
-    function openAuthModal() {
-      authModal.classList.remove('hidden');
-      switchAuthTab('login');
-      loginEmail.value = '';
-      loginPassword.value = '';
-      loginStatus.innerHTML = '&nbsp;';
-      loginStatus.className = 'key-status';
-    }
-
-    function closeAuthModal() {
-      authModal.classList.add('hidden');
-    }
-
-    function switchAuthTab(tab) {
-      if (tab === 'login') {
-        authLoginPane.classList.remove('hidden');
-        authRegisterPane.classList.add('hidden');
-        authTabLogin.classList.add('active');
-        authTabRegister.classList.remove('active');
-      } else {
-        authLoginPane.classList.add('hidden');
-        authRegisterPane.classList.remove('hidden');
-        authTabLogin.classList.remove('active');
-        authTabRegister.classList.add('active');
-        registerName.value = '';
-        registerEmail.value = '';
-        registerPassword.value = '';
-        registerStatus.innerHTML = '&nbsp;';
-        registerStatus.className = 'key-status';
-      }
-    }
-
-    async function doLogin() {
-      const email = loginEmail.value.trim();
-      const password = loginPassword.value;
-      if (!email || !password) {
-        loginStatus.textContent = 'Please enter both email and password.';
-        loginStatus.className = 'key-status bad';
-        return;
-      }
-      loginSubmitBtn.disabled = true;
-      loginStatus.textContent = 'Signing in…';
-      loginStatus.className = 'key-status';
-      try {
-        const result = await fetchJson('/api/auth/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password })
-        });
-        authToken = result.token;
-        currentUser = result.user;
-        localStorage.setItem('bi_jwt_token', authToken);
-        localStorage.setItem('bi_user', JSON.stringify(currentUser));
-        updateAuthUI();
-        closeAuthModal();
-      } catch (err) {
-        loginStatus.textContent = err.message || 'Login failed. Check your credentials.';
-        loginStatus.className = 'key-status bad';
-      } finally {
-        loginSubmitBtn.disabled = false;
-      }
-    }
-
-    async function doRegister() {
-      const name = registerName.value.trim();
-      const email = registerEmail.value.trim();
-      const password = registerPassword.value;
-      if (!name || !email || !password) {
-        registerStatus.textContent = 'Please fill in all fields.';
-        registerStatus.className = 'key-status bad';
-        return;
-      }
-      if (password.length < 8) {
-        registerStatus.textContent = 'Password must be at least 8 characters.';
-        registerStatus.className = 'key-status bad';
-        return;
-      }
-      registerSubmitBtn.disabled = true;
-      registerStatus.textContent = 'Creating account…';
-      registerStatus.className = 'key-status';
-      try {
-        const result = await fetchJson('/api/auth/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, email, password })
-        });
-        authToken = result.token;
-        currentUser = result.user;
-        localStorage.setItem('bi_jwt_token', authToken);
-        localStorage.setItem('bi_user', JSON.stringify(currentUser));
-        updateAuthUI();
-        closeAuthModal();
-      } catch (err) {
-        registerStatus.textContent = err.message || 'Registration failed. Try a different email.';
-        registerStatus.className = 'key-status bad';
-      } finally {
-        registerSubmitBtn.disabled = false;
-      }
-    }
+    // Auth modal open/close/tab/login/register are handled by the standalone auth-bootstrap script below.
 
     function doLogout() {
       authToken = null;
@@ -2046,6 +2694,7 @@
       lastV3Result = null;
       localStorage.removeItem('bi_jwt_token');
       localStorage.removeItem('bi_user');
+      syncSessionIdWithAuthState();
       chartOptionsRow.innerHTML = '';
       chartOptionsRow.classList.add('hidden');
       chartOptionsMeta.classList.add('hidden');
@@ -2114,10 +2763,15 @@
         insightBox.textContent = payload.insight;
         insightBox.classList.add('has-insight');
         insightBox.classList.remove('insight-text');
+      } else {
+        insightBox.textContent = authToken && currentUser
+          ? 'Run a query to see AI-generated insights.'
+          : 'Sign in and run a query to see AI-generated insights.';
+        insightBox.classList.remove('has-insight');
+        insightBox.classList.add('insight-text');
       }
       if (payload && payload.data_structure && payload.data_structure.type) {
-        dataStructureBadge.textContent = payload.data_structure.type.replace(/_/g, ' ');
-        dataStructureBadge.classList.remove('hidden', 'muted');
+        setOptionalBadge(dataStructureBadge, payload.data_structure.type.replace(/_/g, ' '), true);
       }
     }
 
@@ -2148,7 +2802,8 @@
           const selectedPayload = ensureVisualPayload({
             ...lastV3Result,
             chart_type: option,
-            recommended_chart: option
+            recommended_chart: option,
+            user_selected_chart: true
           });
           setCurrentDashboardPayload(selectedPayload);
           lastV3Result = selectedPayload;
@@ -2177,7 +2832,8 @@
       const rootSummary = (result.result_rows || []).length + ' rows · ' + (result.chart_type || 'table') + (result.insight ? ' · ' + result.insight : '');
       addChatBubble('ai', rootSummary, result, true);
       chatThread.scrollTop = chatThread.scrollHeight;
-      loadFollowUpSuggestions();
+      chatSuggestBox.innerHTML = '';
+      chatSuggestBox.classList.add('hidden');
     }
 
     function resetChatFlow() {
@@ -2209,12 +2865,16 @@
         const q = (item && item.question ? item.question : '').trim();
         if (!q) return;
         const chartLabel = (item.chart_type || 'table').replace(/_/g, ' ');
-        chip.innerHTML = '<span class="chat-suggest-index">S' + (index + 1) + '</span>' +
-          '<span class="chat-suggest-text">' + q + '</span>' +
+        chip.innerHTML = '<span class="chat-suggest-text">' + q + '</span>' +
           '<span class="chat-suggest-chart">' + chartLabel + '</span>';
+
+        const chartType = item.chart_type || 'table';
+        const chartLabelEl = chip.querySelector('.chat-suggest-chart');
+        bindHoverChartPreview(chartLabelEl, () => currentDashboardPayload, chartType);
+
         chip.addEventListener('click', async () => {
           chatInput.value = q;
-          await sendChatFollowUp();
+          await sendChatFollowUp(item.chart_type || '');
         });
         chipsWrap.appendChild(chip);
       });
@@ -2223,6 +2883,11 @@
     }
 
     async function loadFollowUpSuggestions() {
+      if (!runtimeDemoMode) {
+        renderFollowUpSuggestions([]);
+        return;
+      }
+
       if (!chatContext || !chatContext.fileName) {
         renderFollowUpSuggestions([]);
         return;
@@ -2230,16 +2895,21 @@
 
       chatSuggestBtn.disabled = true;
       try {
-        const endpoint = authToken ? '/api/v3/follow-up-demo-queries' : '/api/follow-up-demo-queries';
+        const endpoint = '/api/follow-up-demo-queries';
         const reqHeaders = { 'Content-Type': 'application/json' };
-        if (authToken) reqHeaders['Authorization'] = 'Bearer ' + authToken;
+        const requestedCount = parseInt(followUpDemoCountSelect.value, 10);
+        const count = Math.min(12, Math.max(2, Number.isFinite(requestedCount) ? requestedCount : appSettings.followUpSuggestionCount));
+        const chartTypeRaw = String(followUpDemoChartSelect.value || 'all').trim();
+        const chartType = chartTypeRaw || 'all';
 
         const payload = await fetchJson(endpoint, {
           method: 'POST',
           headers: reqHeaders,
           body: JSON.stringify({
             fileName: chatContext.fileName,
-            count: appSettings.followUpSuggestionCount,
+            sessionId,
+            count,
+            chart_type: chartType,
             parentContext: {
               sql: chatContext.sql,
               columns: chatContext.columns,
@@ -2248,7 +2918,6 @@
             }
           })
         });
-
         renderFollowUpSuggestions(payload.queries || []);
       } catch (_error) {
         renderFollowUpSuggestions([]);
@@ -2286,21 +2955,22 @@
         loadBtn.className = 'chat-load-btn';
         loadBtn.textContent = 'Load this result';
         loadBtn.addEventListener('click', () => {
-          setCurrentDashboardPayload(resultPayload);
-          renderChart(resultPayload);
-          renderTable(resultPayload.result_columns, resultPayload.result_rows);
-          displayInsight(resultPayload);
-          displayChartOptions(resultPayload);
-          sqlBox.textContent = resultPayload.sql_query;
-          explanationBox.textContent = resultPayload.sql_explanation || 'No explanation available.';
-          modeBox.textContent = resultPayload.mode || 'local';
+          scrollToOutputWindow();
+          const activePayload = setCurrentDashboardPayload(resultPayload);
+          renderChart(activePayload);
+          renderTable(activePayload.result_columns, activePayload.result_rows);
+          displayInsight(activePayload);
+          displayChartOptions(activePayload);
+          sqlBox.textContent = activePayload.sql_query;
+          explanationBox.textContent = activePayload.sql_explanation || 'No explanation available.';
+          setOptionalBadge(modeBox, activePayload.mode || 'local', true);
           // update context to the loaded result
           chatContext = {
-            sql: resultPayload.sql_query,
-            columns: resultPayload.result_columns || [],
-            rowCount: (resultPayload.result_rows || []).length,
-            sample: (resultPayload.result_rows || []).slice(0, 3),
-            fileName: resultPayload.file_name || fileSelect.value
+            sql: activePayload.sql_query,
+            columns: activePayload.result_columns || [],
+            rowCount: (activePayload.result_rows || []).length,
+            sample: (activePayload.result_rows || []).slice(0, 3),
+            fileName: activePayload.file_name || fileSelect.value
           };
           chatContextBadge.textContent = chatContext.rowCount + ' result' + (chatContext.rowCount !== 1 ? 's' : '') + ' in context';
         });
@@ -2313,7 +2983,7 @@
       return msg; // return msg so caller can update it (thinking → real text)
     }
 
-    async function sendChatFollowUp() {
+    async function sendChatFollowUp(preferredChartType = '') {
       const question = chatInput.value.trim();
       if (!question) return;
       if (!chatContext) {
@@ -2330,9 +3000,8 @@
       chatThread.scrollTop = chatThread.scrollHeight;
 
       try {
-        const endpoint = authToken ? '/api/v3/follow-up' : '/api/follow-up';
+        const endpoint = '/api/follow-up';
         const reqHeaders = { 'Content-Type': 'application/json' };
-        if (authToken) reqHeaders['Authorization'] = 'Bearer ' + authToken;
         const body = {
           fileName: chatContext.fileName,
           question,
@@ -2349,9 +3018,10 @@
           headers: reqHeaders,
           body: JSON.stringify(body)
         });
+        const normalizedResult = applyDemoQueryChartPreference(result, preferredChartType);
 
         // replace thinking bubble with insight summary
-        const summary = (result.result_rows || []).length + ' rows · ' + (result.recommended_chart || result.chart_type || 'table').replace(/_/g, ' ') + (result.insight ? ' · ' + result.insight : '');
+        const summary = (normalizedResult.result_rows || []).length + ' rows · ' + (normalizedResult.recommended_chart || normalizedResult.chart_type || 'table').replace(/_/g, ' ') + (normalizedResult.insight ? ' · ' + normalizedResult.insight : '');
         thinkingMsg.classList.remove('thinking');
         thinkingMsg.textContent = summary;
 
@@ -2360,32 +3030,33 @@
         bar.className = 'chat-result-bar';
         const rowPill = document.createElement('span');
         rowPill.className = 'chat-result-pill';
-        rowPill.textContent = (result.result_rows || []).length + ' rows';
+        rowPill.textContent = (normalizedResult.result_rows || []).length + ' rows';
         bar.appendChild(rowPill);
         const chartPill = document.createElement('span');
         chartPill.className = 'chat-result-pill';
-        const resultChartType = (result.recommended_chart || result.chart_type || 'table');
+        const resultChartType = (normalizedResult.recommended_chart || normalizedResult.chart_type || 'table');
         chartPill.textContent = resultChartType.replace(/_/g, ' ');
-        attachChartPillPreview(chartPill, result, resultChartType);
+        attachChartPillPreview(chartPill, normalizedResult, resultChartType);
         bar.appendChild(chartPill);
         const loadBtn = document.createElement('button');
         loadBtn.className = 'chat-load-btn';
         loadBtn.textContent = 'Load this result';
         loadBtn.addEventListener('click', () => {
-          setCurrentDashboardPayload(result);
-          renderChart(result);
-          renderTable(result.result_columns, result.result_rows);
-          displayInsight(result);
-          displayChartOptions(result);
-          sqlBox.textContent = result.sql_query;
-          explanationBox.textContent = result.sql_explanation || 'No explanation available.';
-          modeBox.textContent = result.mode || 'local';
+          scrollToOutputWindow();
+          const activePayload = setCurrentDashboardPayload(normalizedResult);
+          renderChart(activePayload);
+          renderTable(activePayload.result_columns, activePayload.result_rows);
+          displayInsight(activePayload);
+          displayChartOptions(activePayload);
+          sqlBox.textContent = activePayload.sql_query;
+          explanationBox.textContent = activePayload.sql_explanation || 'No explanation available.';
+          setOptionalBadge(modeBox, activePayload.mode || 'local', true);
           chatContext = {
-            sql: result.sql_query,
-            columns: result.result_columns || [],
-            rowCount: (result.result_rows || []).length,
-            sample: (result.result_rows || []).slice(0, 3),
-            fileName: result.file_name || fileSelect.value
+            sql: activePayload.sql_query,
+            columns: activePayload.result_columns || [],
+            rowCount: (activePayload.result_rows || []).length,
+            sample: (activePayload.result_rows || []).slice(0, 3),
+            fileName: activePayload.file_name || fileSelect.value
           };
           chatContextBadge.textContent = chatContext.rowCount + ' result' + (chatContext.rowCount !== 1 ? 's' : '') + ' in context';
         });
@@ -2393,25 +3064,26 @@
         thinkingMsg.parentElement.appendChild(bar);
 
         // auto-load into dashboard
-        setCurrentDashboardPayload(result);
-        renderChart(result);
-        renderTable(result.result_columns, result.result_rows);
-        displayInsight(result);
-        displayChartOptions(result);
-        sqlBox.textContent = result.sql_query;
-        explanationBox.textContent = result.sql_explanation || 'No explanation available.';
-        modeBox.textContent = result.mode || 'local';
+        const activePayload = setCurrentDashboardPayload(normalizedResult);
+        renderChart(activePayload);
+        renderTable(activePayload.result_columns, activePayload.result_rows);
+        displayInsight(activePayload);
+        displayChartOptions(activePayload);
+        sqlBox.textContent = activePayload.sql_query;
+        explanationBox.textContent = activePayload.sql_explanation || 'No explanation available.';
+        setOptionalBadge(modeBox, activePayload.mode || 'local', true);
 
         // update context for next follow-up
         chatContext = {
-          sql: result.sql_query,
-          columns: result.result_columns || [],
-          rowCount: (result.result_rows || []).length,
-          sample: (result.result_rows || []).slice(0, 3),
-          fileName: result.file_name || fileSelect.value
+          sql: activePayload.sql_query,
+          columns: activePayload.result_columns || [],
+          rowCount: (activePayload.result_rows || []).length,
+          sample: (activePayload.result_rows || []).slice(0, 3),
+          fileName: activePayload.file_name || fileSelect.value
         };
         chatContextBadge.textContent = chatContext.rowCount + ' result' + (chatContext.rowCount !== 1 ? 's' : '') + ' in context';
-        loadFollowUpSuggestions();
+        chatSuggestBox.innerHTML = '';
+        chatSuggestBox.classList.add('hidden');
 
       } catch (error) {
         thinkingMsg.classList.remove('thinking');
@@ -2429,7 +3101,9 @@
     async function loadFiles(preferredFileName = '') {
       setStatus('Loading datasets...');
       try {
-        const payload = await fetchJson('/api/files');
+        const payload = await fetchJson('/api/files?sessionId=' + encodeURIComponent(sessionId), {
+          headers: buildRequestContextHeaders()
+        });
         const previousSelection = preferredFileName || fileSelect.value;
         fileSelect.innerHTML = '';
 
@@ -2471,12 +3145,16 @@
       if (!fileName) return;
       setStatus('Reading schema...');
       try {
-        const payload = await fetchJson('/api/schema?file=' + encodeURIComponent(fileName));
+        const payload = await fetchJson('/api/schema?file=' + encodeURIComponent(fileName) + '&sessionId=' + encodeURIComponent(sessionId), {
+          headers: buildRequestContextHeaders()
+        });
         currentSchemaColumns = Array.isArray(payload.columns) ? payload.columns : [];
         tableNameBadge.textContent = payload.table_name;
         schemaBox.textContent = payload.columns.map(column => column.name + ' (' + column.type + ')').join('\n');
         renderDatasetProfile();
-        demoQueriesBox.textContent = 'Click "Generate Demo Queries" to load AI-suggested queries.';
+        demoQueriesBox.textContent = runtimeDemoMode
+          ? 'Click "Generate Demo Queries" to load demo queries for this dataset.'
+          : 'Click "Generate Demo Queries" to load AI-suggested queries.';
         setStatus('Schema ready.');
       } catch (error) {
         currentSchemaColumns = [];
@@ -2487,6 +3165,7 @@
 
     let activeFilter = 'all';
     let demoQueryCount = 8;
+    let demoDifficulty = 'standard';
 
     const CHART_ICONS = {
       bar_chart:  '&#9646; Bar',
@@ -2511,7 +3190,8 @@
 
     function updateDemoConfigSummary() {
       const filterLabel = activeFilter === 'all' ? 'all chart types' : formatChartLabel(activeFilter).replace(/&#[^;]+;\s*/g, '').trim();
-      demoConfigSummary.textContent = 'Current setup: ' + demoQueryCount + ' queries • ' + filterLabel + '.';
+      const difficultyLabel = demoDifficulty.charAt(0).toUpperCase() + demoDifficulty.slice(1);
+      demoConfigSummary.textContent = 'Current setup: ' + demoQueryCount + ' queries • ' + filterLabel + ' • ' + difficultyLabel + '.';
     }
 
     async function openDemoQueryModal() {
@@ -2523,6 +3203,7 @@
         return;
       }
       demoCountSelect.value = String(demoQueryCount);
+      demoDifficultySelect.value = demoDifficulty;
       document.querySelectorAll('#demoFilterBar .demo-filter-pill').forEach(p => p.classList.toggle('active', p.dataset.filter === activeFilter));
       demoQueryModal.classList.remove('hidden');
     }
@@ -2552,12 +3233,11 @@
         button.style.animationDelay = index * 40 + 'ms';
         const iconHtml = formatChartLabel(item.chart_type);
         button.innerHTML =
-          '<span class="demo-index">Q' + (index + 1) + '</span>' +
           '<span class="demo-question">' + item.question + '</span>' +
           '<span class="demo-chart demo-chart--' + item.chart_type + '">' + iconHtml + '</span>';
         button.addEventListener('click', async () => {
           questionInput.value = item.question;
-          await generateDashboard();
+          await generateDashboard(item.chart_type || '');
         });
         demoQueriesBox.appendChild(button);
       });
@@ -2579,12 +3259,18 @@
       }
       const count = demoQueryCount;
       const chartType = activeFilter === 'all' ? '' : activeFilter;
+      const difficulty = demoDifficulty;
       const label = chartType ? formatChartLabel(chartType).replace(/&#[^;]+;\s*/g, '').trim() + ' ' : '';
+      const difficultyLabel = difficulty.charAt(0).toUpperCase() + difficulty.slice(1);
       demoRefreshButton.disabled = true;
       demoApplyBtn.disabled = true;
-      demoQueriesBox.innerHTML = '<span style="color:var(--soft)">Generating ' + count + ' ' + label + 'AI-suggested queries…</span>';
+      demoQueriesBox.innerHTML = '<span style="color:var(--soft)">Generating ' + count + ' ' + difficultyLabel + ' ' + label + 'demo queries…</span>';
       try {
-        const payload = await fetchJson('/api/demo-queries?file=' + encodeURIComponent(fileName) + '&count=' + count + (chartType ? '&chart_type=' + encodeURIComponent(chartType) : ''));
+        const payload = await fetchJson('/api/demo-queries?file=' + encodeURIComponent(fileName) + '&count=' + count + (chartType ? '&chart_type=' + encodeURIComponent(chartType) : '') + '&difficulty=' + encodeURIComponent(difficulty) + '&sessionId=' + encodeURIComponent(sessionId), {
+          headers: buildRequestContextHeaders()
+        });
+        demoDifficulty = payload.difficulty || difficulty;
+        updateDemoConfigSummary();
         renderDemoQueries(payload.queries);
       } catch (error) {
         demoQueriesBox.textContent = error.message;
@@ -2604,9 +3290,15 @@
         const formData = new FormData();
         formData.append('file', file);
         formData.append('saveToDatabase', saveToDatabase ? 'true' : 'false');
-        const uploadPayload = await fetchJson('/api/upload', { method: 'POST', body: formData });
+        const uploadPayload = await fetchJson('/api/upload', {
+          method: 'POST',
+          headers: buildRequestContextHeaders(),
+          body: formData
+        });
         const uploadedName = uploadPayload.file_name || file.name;
         await loadFiles(uploadedName);
+        uploadInput.value = '';
+        updateUploadSelectionUi(null);
         setStatus(uploadPayload.temporary ? 'CSV uploaded temporarily and loaded.' : 'CSV saved to database and loaded.');
       } catch (error) {
         setStatus(error.message);
@@ -2805,7 +3497,8 @@
 
       const chartType = normalizedPayload.chart_type || normalizedPayload.recommended_chart || 'table';
       // Animate badge
-      chartTypeBox.textContent = chartType.replace(/_/g, ' ');
+      setOptionalBadge(chartTypeBox, chartType.replace(/_/g, ' '));
+      chartTypeBox.classList.remove('hidden');
       triggerAnimate(chartTypeBox, 'pop-in');
 
       const hasChartData = normalizedPayload.chart_data && normalizedPayload.chart_data.labels && normalizedPayload.chart_data.labels.length > 0;
@@ -3071,17 +3764,24 @@
             : {}
         };
 
-      if (chart) {
-        chart.config.type = chartJsType;
-        chart.data = chartData;
-        chart.options = chartOptions;
-        chart.update();
-      } else {
+      try {
+        if (chart) {
+          chart.destroy();
+          chart = null;
+        }
         chart = new Chart(chartCanvas.getContext('2d'), {
           type: chartJsType,
           data: chartData,
           options: chartOptions
         });
+      } catch (chartErr) {
+        console.error('[renderChart] Chart.js error:', chartErr);
+        chartCanvas.style.display = 'none';
+        chartFallback.textContent = 'Chart render error: ' + (chartErr && chartErr.message ? chartErr.message : String(chartErr));
+        chartFallback.style.display = 'grid';
+        chartWrap.classList.add('result-ready');
+        chartCard.classList.add('result-ready');
+        return;
       }
 
       chartWrap.classList.add('result-ready');
@@ -3095,25 +3795,29 @@
 
     async function loadHistory() {
       if (!appSettings.showHistory) {
-        historyBox.innerHTML = '<div class="history-empty">History is hidden by settings.</div>';
+        renderHistoryEmptyState('History is hidden by settings.');
+        return;
+      }
+
+      if (!authToken || !currentUser) {
+        renderHistoryEmptyState('Sign in to show conversation memory.');
         return;
       }
 
       try {
         const payload = await fetchJson('/api/history?sessionId=' + encodeURIComponent(sessionId));
         if (!payload.history.length) {
-          historyBox.innerHTML = '<div class="history-empty">No messages yet.</div>';
+          renderHistoryEmptyState('No messages yet.');
           return;
         }
 
-        const items = payload.history.slice(-8).reverse().map((item, idx) => {
+        const items = payload.history.slice(-8).reverse().map(item => {
           const q = escapeHtml(item.question || 'No question');
           const sql = escapeHtml(item.sql_query || 'No SQL');
           const encodedQuestion = encodeURIComponent(item.question || '');
           return (
             '<div class="history-item">' +
               '<div class="history-item-top">' +
-                '<span class="history-index">#' + (idx + 1) + '</span>' +
                 '<button type="button" class="secondary history-copy-btn" data-copy="' + encodedQuestion + '">Copy</button>' +
               '</div>' +
               '<div class="history-question">' + q + '</div>' +
@@ -3124,15 +3828,16 @@
 
         historyBox.innerHTML = items.join('');
       } catch (_error) {
-        historyBox.innerHTML = '<div class="history-empty">History unavailable.</div>';
+        renderHistoryEmptyState('History unavailable.');
       }
     }
 
     // â”€â”€â”€ Generate Dashboard â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-    async function generateDashboard() {
+    async function generateDashboard(preferredChartType = '') {
       const fileName = fileSelect.value;
       const question = questionInput.value.trim();
+      const requestedDemoChartType = String(preferredChartType || '').trim();
       if (!fileName) { setStatus('Select a dataset first.'); return; }
       if (!question) { setStatus('Enter a business question.'); return; }
 
@@ -3153,10 +3858,9 @@
       destroyChart();
 
       try {
-        const endpoint = authToken ? '/api/v3/query' : '/api/query';
+        const endpoint = '/api/query';
         const reqHeaders = { 'Content-Type': 'application/json' };
-        if (authToken) reqHeaders['Authorization'] = 'Bearer ' + authToken;
-        const payload = await fetchJson(endpoint, {
+        let payload = await fetchJson(endpoint, {
           method: 'POST',
           headers: reqHeaders,
           body: JSON.stringify({
@@ -3173,6 +3877,10 @@
           throw new Error('The relational schema is not present. Please verify again.');
         }
 
+        if (requestedDemoChartType) {
+          payload = applyDemoQueryChartPreference(payload, requestedDemoChartType);
+        }
+
         chartWrap.classList.remove('loading');
 
         // Animate result panels
@@ -3185,19 +3893,19 @@
         sqlBox.textContent = payload.sql_query;
         explanationBox.textContent = payload.sql_explanation || 'No explanation available.';
 
+        setOptionalBadge(modeBox, payload.mode || 'local', true);
         triggerAnimate(modeBox, 'pop-in');
-        modeBox.textContent = payload.mode || 'local';
 
-        setCurrentDashboardPayload(payload);
-        renderChart(payload);
-        renderTable(payload.result_columns, payload.result_rows);
-        displayInsight(payload);
-        displayChartOptions(payload);
-        completePipelineProgress(payload);
+        const activePayload = setCurrentDashboardPayload(payload);
+        renderChart(activePayload);
+        renderTable(activePayload.result_columns, activePayload.result_rows);
+        displayInsight(activePayload);
+        displayChartOptions(activePayload);
+        completePipelineProgress(activePayload);
         await loadHistory();
 
         setStatus('Dashboard generated. Ask a follow-up to filter further.');
-        openChatFlow(payload);
+        openChatFlow(activePayload);
       } catch (error) {
         const errorRaw = (error && error.message ? error.message : '').toLowerCase();
         if (errorRaw.includes('invalid or expired token') || errorRaw.includes('authorization token is required')) {
@@ -3226,19 +3934,50 @@
     fileSelect.addEventListener('change', loadSchema);
     fileSelect.addEventListener('change', loadPreview);
     uploadButton.addEventListener('click', uploadCsv);
+    uploadInput.addEventListener('change', () => updateUploadSelectionUi(uploadInput.files[0] || null));
+    uploadDropZone.addEventListener('click', () => uploadInput.click());
+    uploadDropZone.addEventListener('keydown', event => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        uploadInput.click();
+      }
+    });
+    ['dragenter', 'dragover'].forEach(eventName => {
+      uploadDropZone.addEventListener(eventName, event => {
+        event.preventDefault();
+        uploadDropZone.classList.add('is-dragging');
+      });
+    });
+    ['dragleave', 'dragend', 'drop'].forEach(eventName => {
+      uploadDropZone.addEventListener(eventName, event => {
+        event.preventDefault();
+        uploadDropZone.classList.remove('is-dragging');
+      });
+    });
+    uploadDropZone.addEventListener('drop', event => {
+      const files = event.dataTransfer && event.dataTransfer.files;
+      if (!files || !files.length) return;
+      uploadInput.files = files;
+      updateUploadSelectionUi(files[0]);
+    });
     previewReloadBtn.addEventListener('click', loadPreview);
     voiceAskBtn.addEventListener('click', toggleVoiceAsk);
+    voiceDoneBtn.addEventListener('click', finishVoiceAsk);
+    voiceCancelBtn.addEventListener('click', cancelVoiceAsk);
     compareToggleBtn.addEventListener('click', () => setCompareMode(!compareModeEnabled));
     compareChartSelect.addEventListener('change', () => { if (currentDashboardPayload) renderCompareChart(currentDashboardPayload); });
+    comparePrevBtn.addEventListener('click', () => stepCompareOption(-1));
+    compareNextBtn.addEventListener('click', () => stepCompareOption(1));
     speakNarrativeBtn.addEventListener('click', speakNarrative);
     pauseNarrativeBtn.addEventListener('click', toggleNarrativePause);
-    speedNarrativeBtn.addEventListener('click', cycleNarrativeSpeed);
+    speedNarrativeSelect.addEventListener('change', handleNarrativeSpeedChange);
     regenerateNarrativeBtn.addEventListener('click', () => renderNarrative(currentDashboardPayload));
     exportPngBtn.addEventListener('click', exportChartPng);
     exportCsvBtn.addEventListener('click', exportRowsCsv);
     exportSqlBtn.addEventListener('click', exportSqlText);
     copySqlBtn.addEventListener('click', copySqlText);
     exportNarrativeBtn.addEventListener('click', exportNarrativeText);
+    downloadReportBtn.addEventListener('click', downloadAnalysisReport);
     generateButton.addEventListener('click', generateDashboard);
     questionInput.addEventListener('keydown', event => {
       if (event.key === 'Enter' && !event.shiftKey) {
@@ -3251,6 +3990,7 @@
     // Chat flow wiring
     demoApplyBtn.addEventListener('click', async () => {
       demoQueryCount = parseInt(demoCountSelect.value, 10) || 8;
+      demoDifficulty = demoDifficultySelect.value || 'standard';
       updateDemoConfigSummary();
       closeDemoQueryModal();
       await loadDemoQueries();
@@ -3264,18 +4004,7 @@
     chatInput.addEventListener('keydown', e => { if (e.key === 'Enter') sendChatFollowUp(); });
     fileSelect.addEventListener('change', resetChatFlow);
 
-    authLoginBtn.addEventListener('click', openAuthModal);
     authLogoutBtn.addEventListener('click', doLogout);
-    authModal.addEventListener('click', e => { if (e.target === authModal) closeAuthModal(); });
-    authModalCloseBtn.addEventListener('click', closeAuthModal);
-    document.getElementById('authLoginCancelBtn').addEventListener('click', closeAuthModal);
-    document.getElementById('authRegisterCancelBtn').addEventListener('click', closeAuthModal);
-    authTabLogin.addEventListener('click', () => switchAuthTab('login'));
-    authTabRegister.addEventListener('click', () => switchAuthTab('register'));
-    loginSubmitBtn.addEventListener('click', doLogin);
-    loginPassword.addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
-    registerSubmitBtn.addEventListener('click', doRegister);
-    registerPassword.addEventListener('keydown', e => { if (e.key === 'Enter') doRegister(); });
 
     historyBox.addEventListener('click', async (event) => {
       const btn = event.target.closest('.history-copy-btn');
@@ -3291,17 +4020,172 @@
       }
     });
 
+    if ('scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual';
+    }
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    resetDashboardState();
     initMergedVisualEffects();
     restoreAuthState();
     initVoiceFeatures();
     updateNarrativeSpeechUi();
     syncSettingsControls();
     applySettingsEffects();
+    applyRuntimeModeEffects();
     updateDemoConfigSummary();
     renderDatasetProfile();
     renderNarrative(null);
     loadFiles();
+    syncRuntimeModeState();
     loadHistory();
+  </script>
+
+  <!-- ═══ Auth Bootstrap — fully standalone, runs after main script ═══ -->
+  <script>
+  (function () {
+    function authOpen() {
+      var m = document.getElementById('authModal');
+      if (!m) return;
+      m.classList.remove('hidden');
+      authTabSwitch('login');
+      var el;
+      el = document.getElementById('loginEmail');    if (el) el.value = '';
+      el = document.getElementById('loginPassword'); if (el) el.value = '';
+      el = document.getElementById('loginStatus');   if (el) { el.innerHTML = '&nbsp;'; el.className = 'key-status'; }
+    }
+
+    function authClose() {
+      var m = document.getElementById('authModal');
+      if (m) m.classList.add('hidden');
+    }
+
+    function authTabSwitch(which) {
+      var lp = document.getElementById('authLoginPane');
+      var rp = document.getElementById('authRegisterPane');
+      var tl = document.getElementById('authTabLogin');
+      var tr = document.getElementById('authTabRegister');
+      if (!lp || !rp) return;
+      if (which === 'login') {
+        lp.classList.remove('hidden'); rp.classList.add('hidden');
+        if (tl) tl.classList.add('active');    if (tr) tr.classList.remove('active');
+      } else {
+        lp.classList.add('hidden'); rp.classList.remove('hidden');
+        if (tl) tl.classList.remove('active'); if (tr) tr.classList.add('active');
+        var el;
+        el = document.getElementById('registerName');     if (el) el.value = '';
+        el = document.getElementById('registerEmail');    if (el) el.value = '';
+        el = document.getElementById('registerPassword'); if (el) el.value = '';
+        el = document.getElementById('registerStatus');   if (el) { el.innerHTML = '&nbsp;'; el.className = 'key-status'; }
+      }
+    }
+
+    async function authLogin() {
+      var emailEl = document.getElementById('loginEmail');
+      var pwEl    = document.getElementById('loginPassword');
+      var st      = document.getElementById('loginStatus');
+      var btn     = document.getElementById('loginSubmitBtn');
+      var email   = emailEl ? emailEl.value.trim() : '';
+      var pw      = pwEl    ? pwEl.value            : '';
+      if (!email || !pw) {
+        if (st) { st.textContent = 'Please enter email and password.'; st.className = 'key-status bad'; }
+        return;
+      }
+      if (btn) btn.disabled = true;
+      if (st)  { st.textContent = 'Signing in\u2026'; st.className = 'key-status'; }
+      try {
+        var resp = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email, password: pw })
+        });
+        var data = await resp.json();
+        if (!resp.ok) throw new Error(data.error || data.message || 'Login failed');
+        window.authToken   = data.token;
+        window.currentUser = data.user;
+        localStorage.setItem('bi_jwt_token', data.token);
+        localStorage.setItem('bi_user', JSON.stringify(data.user));
+        if (typeof window.syncSessionIdWithAuthState === 'function') window.syncSessionIdWithAuthState();
+        if (typeof window.updateAuthUI               === 'function') window.updateAuthUI();
+        authClose();
+      } catch (e) {
+        if (st) { st.textContent = e.message || 'Login failed.'; st.className = 'key-status bad'; }
+      } finally {
+        if (btn) btn.disabled = false;
+      }
+    }
+
+    async function authRegister() {
+      var nameEl  = document.getElementById('registerName');
+      var emailEl = document.getElementById('registerEmail');
+      var pwEl    = document.getElementById('registerPassword');
+      var st      = document.getElementById('registerStatus');
+      var btn     = document.getElementById('registerSubmitBtn');
+      var name    = nameEl  ? nameEl.value.trim()  : '';
+      var email   = emailEl ? emailEl.value.trim() : '';
+      var pw      = pwEl    ? pwEl.value            : '';
+      if (!name || !email || !pw) {
+        if (st) { st.textContent = 'Please fill in all fields.'; st.className = 'key-status bad'; }
+        return;
+      }
+      if (pw.length < 8) {
+        if (st) { st.textContent = 'Password must be at least 8 characters.'; st.className = 'key-status bad'; }
+        return;
+      }
+      if (btn) btn.disabled = true;
+      if (st)  { st.textContent = 'Creating account\u2026'; st.className = 'key-status'; }
+      try {
+        var resp = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: name, email: email, password: pw })
+        });
+        var data = await resp.json();
+        if (!resp.ok) throw new Error(data.error || data.message || 'Registration failed');
+        window.authToken   = data.token;
+        window.currentUser = data.user;
+        localStorage.setItem('bi_jwt_token', data.token);
+        localStorage.setItem('bi_user', JSON.stringify(data.user));
+        if (typeof window.syncSessionIdWithAuthState === 'function') window.syncSessionIdWithAuthState();
+        if (typeof window.updateAuthUI               === 'function') window.updateAuthUI();
+        authClose();
+      } catch (e) {
+        if (st) { st.textContent = e.message || 'Registration failed.'; st.className = 'key-status bad'; }
+      } finally {
+        if (btn) btn.disabled = false;
+      }
+    }
+
+    function wireAuth() {
+      // Expose on window so openAuthModal() calls from the main script still resolve
+      window.openAuthModal  = authOpen;
+      window.closeAuthModal = authClose;
+      window.switchAuthTab  = authTabSwitch;
+      window.doLogin        = authLogin;
+      window.doRegister     = authRegister;
+
+      function on(id, ev, fn) { var el = document.getElementById(id); if (el) el.addEventListener(ev, fn); }
+
+      on('authLoginBtn',         'click',   authOpen);
+      on('authModalCloseBtn',    'click',   authClose);
+      on('authLoginCancelBtn',   'click',   authClose);
+      on('authRegisterCancelBtn','click',   authClose);
+      on('authTabLogin',         'click',   function () { authTabSwitch('login'); });
+      on('authTabRegister',      'click',   function () { authTabSwitch('register'); });
+      on('loginSubmitBtn',       'click',   authLogin);
+      on('registerSubmitBtn',    'click',   authRegister);
+      on('loginPassword',        'keydown', function (e) { if (e.key === 'Enter') authLogin(); });
+      on('registerPassword',     'keydown', function (e) { if (e.key === 'Enter') authRegister(); });
+
+      var modal = document.getElementById('authModal');
+      if (modal) modal.addEventListener('click', function (e) { if (e.target === modal) authClose(); });
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', wireAuth);
+    } else {
+      wireAuth();
+    }
+  })();
   </script>
 </body>
 </html>
