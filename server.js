@@ -825,6 +825,24 @@ function normalizeColumnPhrase(text) {
     .trim();
 }
 
+function escapeRegExp(value) {
+  return String(value || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function hasTermMatch(text, term) {
+  const source = String(text || '').toLowerCase();
+  const normalizedTerm = normalizeColumnPhrase(term);
+  if (!source || !normalizedTerm) {
+    return false;
+  }
+  const pattern = normalizedTerm
+    .split(/\s+/)
+    .map(piece => escapeRegExp(piece))
+    .join('\\s+');
+  const regex = new RegExp(`(^|[^a-z0-9])${pattern}([^a-z0-9]|$)`, 'i');
+  return regex.test(source);
+}
+
 function resolveColumnByPhrase(phrase, schema, preferNonNumeric = true) {
   const normalizedPhrase = normalizeColumnPhrase(phrase);
   if (!normalizedPhrase || !schema || !Array.isArray(schema.columns)) {
@@ -1163,11 +1181,24 @@ function findQuestionMatchedColumn(question, schema, predicate = () => true) {
     const raw = String(column.name || '').toLowerCase();
     const spaced = raw.replace(/_/g, ' ');
     const normalizedColumn = normalizeColumnPhrase(column.name);
-    return lower.includes(raw) || lower.includes(spaced) || (normalizedColumn && normalizedQuestion.includes(normalizedColumn));
+    return hasTermMatch(lower, raw) || hasTermMatch(lower, spaced) || (normalizedColumn && normalizedQuestion.includes(normalizedColumn));
   }) || null;
 }
 
 const METRIC_LANGUAGE_MAP = {
+  'online spending': ['avg_online_spend'],
+  'store spending': ['avg_store_spend'],
+  'online spend': ['avg_online_spend'],
+  'store spend': ['avg_store_spend'],
+  'online orders': ['monthly_online_orders'],
+  'monthly online orders': ['monthly_online_orders'],
+  'internet usage': ['daily_internet_hours'],
+  'daily internet usage': ['daily_internet_hours'],
+  'tech savvy': ['tech_savvy_score'],
+  'tech savviness': ['tech_savvy_score'],
+  'technology savviness': ['tech_savvy_score'],
+  'online orders': ['monthly_online_orders'],
+  'discount sensitivity': ['discount_sensitivity'],
   sales: ['revenue', 'amount', 'income'],
   income: ['revenue', 'amount'],
   profit: ['revenue', 'margin', 'roi'],
@@ -1187,6 +1218,7 @@ function findRequestedMetric(question, schema) {
 
 function findRequestedMetrics(question, schema, allowFallback = true) {
   const lower = String(question || '').toLowerCase();
+  const normalizedQuestion = normalizeColumnPhrase(question);
   const intelligence = getSchemaIntelligence(schema);
   const metricNames = intelligence.metric_candidates || [];
   const numericColumns = metricNames
@@ -1199,7 +1231,7 @@ function findRequestedMetrics(question, schema, allowFallback = true) {
     const columnTokens = new Set(tokenizeSemantic(column.name));
     let score = 0;
 
-    if (lower.includes(colLower) || lower.includes(spaced)) {
+    if (hasTermMatch(lower, colLower) || hasTermMatch(lower, spaced)) {
       score += 10;
     }
 
@@ -1216,11 +1248,18 @@ function findRequestedMetrics(question, schema, allowFallback = true) {
     });
 
     // Semantic language mapping, e.g., sales -> revenue, engagement -> engagement_score.
-    Array.from(queryTokens).forEach(token => {
-      const mapped = METRIC_LANGUAGE_MAP[token] || [];
-      mapped.forEach(alias => {
+    Object.entries(METRIC_LANGUAGE_MAP).forEach(([phrase, aliases]) => {
+      if (!hasTermMatch(lower, phrase) && !normalizedQuestion.includes(normalizeColumnPhrase(phrase))) {
+        return;
+      }
+      aliases.forEach(alias => {
         const aliasLower = String(alias).toLowerCase();
-        if (colLower.includes(aliasLower) || spaced.includes(aliasLower.replace(/_/g, ' '))) {
+        const aliasSpaced = aliasLower.replace(/_/g, ' ');
+        if (colLower === aliasLower || spaced === aliasSpaced) {
+          score += 8;
+          return;
+        }
+        if (colLower.includes(aliasLower) || spaced.includes(aliasSpaced)) {
           score += 3;
         }
       });
@@ -1243,6 +1282,23 @@ function findRequestedMetrics(question, schema, allowFallback = true) {
       exactSeen.add(column.name);
       return true;
     });
+  }
+
+  const topScore = scored.length ? scored[0].score : 0;
+  const strongMatches = scored
+    .filter(item => item.score >= Math.max(4, topScore - 2))
+    .map(item => item.column);
+
+  if (strongMatches.length > 0) {
+    const strongDeduped = [];
+    const strongSeen = new Set();
+    strongMatches.forEach(column => {
+      if (!strongSeen.has(column.name)) {
+        strongSeen.add(column.name);
+        strongDeduped.push(column);
+      }
+    });
+    return strongDeduped.slice(0, 4);
   }
 
   const matched = scored.filter(item => item.score > 0).map(item => item.column);
@@ -1477,6 +1533,18 @@ function findRequestedDimensions(question, schema) {
     });
   }
 
+  // Heuristic: preference-vs-preference wording should keep preference as a grouping dimension.
+  if ((/\bprefer\b|\bpreference\b/.test(lower) || /\bonline shopping\b|\bstore shopping\b/.test(lower))) {
+    const preferenceColumn = schema.columns.find(column => /shopping[_\s]?preference/i.test(column.name));
+    addDimension(preferenceColumn || null);
+  }
+
+  // Heuristic: explicit city tier wording should map to the city_tier dimension.
+  if (/\bcity\s+tier\b|\bcity\s+tiers\b/.test(lower)) {
+    const cityTierColumn = schema.columns.find(column => /city[_\s]?tier/i.test(column.name));
+    addDimension(cityTierColumn || null);
+  }
+
   if (dimensions.length > 0) {
     return dimensions;
   }
@@ -1589,11 +1657,16 @@ function buildTopBottomMetricSql(question, schema) {
 
 function inferAnalysisType(question) {
   const lower = String(question || '').toLowerCase();
+  const influencePattern = /\b(do|does)\b.+\b(more|higher|lower|less)\b/;
+  const relationshipPattern = /\b(affect|affects|influence|influences|impact|impacts|relate|related|relationship|correlation)\b/;
+  if (relationshipPattern.test(lower) || influencePattern.test(lower)) {
+    return 'correlation';
+  }
+  if (lower.includes('correlation') || lower.includes('relationship') || lower.includes('relation') || lower.includes('relate') || lower.includes('related') || /\bhow\s+.+\s+affects?\s+.+\b/.test(lower)) {
+    return 'correlation';
+  }
   if (lower.includes('trend') || lower.includes('over time') || lower.includes('monthly') || lower.includes('month')) {
     return 'trend';
-  }
-  if (lower.includes('correlation') || lower.includes('relationship') || lower.includes('relation') || lower.includes('versus') || /\bhow\s+.+\s+affects?\s+.+\b/.test(lower)) {
-    return 'correlation';
   }
   if (lower.includes('yearly') || lower.includes('year over year') || /\byoy\b/.test(lower)) {
     return 'trend';
@@ -1764,12 +1837,18 @@ function intent_extractor(question, schema) {
   const metrics = findRequestedMetrics(question, schema, false).map(col => col.name);
 
   let analysisType = inferAnalysisType(question);
+  const influenceComparative = /\b(do|does)\b.+\b(more|higher|lower|less)\b/.test(lower)
+    || /\b(affect|affects|influence|influences|impact|impacts|relate|related|relationship|correlation)\b/.test(lower);
+  if (metrics.length >= 2 && influenceComparative) {
+    analysisType = 'correlation';
+  }
   if ((/\bby\b/.test(lower) || dimensions.length > 0) && /\bhighest\b|\blowest\b|\bbest\b|\bworst\b|\btop\b|\bbottom\b/.test(lower)) {
     analysisType = 'ranking';
   }
 
   let aggregationType = inferAggregationType(question);
-  if (analysisType === 'ranking' && dimensions.length > 0) {
+  const hasExplicitAggregationSignal = /\baverage\b|\bavg\b|\bmean\b|\bcount\b|\bhow many\b|\bnumber of\b|\bminimum\b|\bmaximum\b|\bmin\b|\bmax\b/.test(lower);
+  if (analysisType === 'ranking' && dimensions.length > 0 && !hasExplicitAggregationSignal) {
     aggregationType = 'SUM';
   }
 
@@ -1797,12 +1876,11 @@ function query_planner(intent, schema, question) {
   const groupedRankingScope = detectGroupedRankingScope(question);
   const isGroupedRanking = intent?.analysis_type === 'ranking' && (groupedRankingScope.month || groupedRankingScope.year || groupedRankingScope.category);
   const isCorrelation = intent?.analysis_type === 'correlation'
-    || /\brelationship\s+between\b|\bcorrelation\s+between\b|\bhow\s+.+\s+affects?\s+.+\b/.test(lower);
+    || /\brelationship\s+between\b|\bcorrelation\s+between\b|\bhow\s+.+\s+affects?\s+.+\b|\b(do|does)\b.+\b(more|higher|lower|less)\b/.test(lower);
 
   const aggregations = {};
   metrics.forEach(metric => {
-    const shouldForceRankingAgg = (intent?.analysis_type === 'ranking') && groupBy.length > 0;
-    const chosen = shouldForceRankingAgg ? 'SUM' : aggregationType;
+    const chosen = aggregationType;
     aggregations[metric] = ['SUM', 'AVG', 'COUNT', 'MAX', 'MIN'].includes(chosen) ? chosen : 'SUM';
   });
 
@@ -1869,6 +1947,10 @@ function query_planner(intent, schema, question) {
         .slice(0, 2);
     } else {
       rawMetrics = rawMetrics.slice(0, 2);
+    }
+
+    if (rawMetrics.length < 2) {
+      throw new Error('Could not confidently identify two numeric metrics for this relationship query. Please specify both metrics explicitly.');
     }
 
     rawMetrics.forEach(metric => {
