@@ -18,7 +18,7 @@
           <span class="brand-divider"></span>
           <span class="brand-machine">QUERY</span>
         </h1>
-        <p class="brand-info">The enterprise-grade AI engine for conversational data analysis.<br>Transform complex datasets into visual stories — instantly.</p>
+        <p class="brand-info">The enterprise-grade AI engine for data analysis.<br>Transform complex datasets into visual stories — instantly.</p>
         <div class="hero-actions">
           <button class="scroll-btn" onclick="document.querySelector('.panel').scrollIntoView({behavior:'smooth'})">Get Started ↓</button>
           <div class="auth-bar">
@@ -31,7 +31,7 @@
         </div>
       </div>
     </section>
-
+    
     <section class="panel">
       <div class="card">
         <div class="card-head">
@@ -49,8 +49,7 @@
           </div>
           <button id="refreshButton" class="secondary">Refresh</button>
         </div>
-
-        <div class="row split upload-row">
+               <div class="row split upload-row">
           <div class="grow">
             <label for="uploadInput">Upload CSV</label>
             <input id="uploadInput" class="upload-input" type="file" accept=".csv">
@@ -61,8 +60,8 @@
               </div>
               <span class="upload-dropzone-action">Browse</span>
             </div>
-          </div>
-          <button id="uploadButton" class="secondary">Upload CSV</button>
+          </div><br><br><br>
+          <button id="uploadButton" class="GenerateButton">Upload CSV</button>
         </div>
 
       </div>
@@ -2512,9 +2511,20 @@
         return error && error.message ? error.message : 'Unexpected request failure.';
       }
 
+      const originalMessage = error && error.message ? String(error.message).trim() : '';
       const raw = (error && error.message ? String(error.message) : '').toLowerCase();
 
       if (context === 'query') {
+        // Preserve explicit, user-facing validation messages from backend guards.
+        if (
+          raw.includes('data questions only')
+          || raw.includes('please ask a full question using one dataset')
+          || raw.includes('supports one table at a time')
+          || raw.includes('looks unrelated to the selected dataset')
+          || raw.includes('please ask a data question about the selected dataset')
+        ) {
+          return originalMessage;
+        }
         if (raw.includes('relational schema is not present') || raw.includes('selected csv file was not found')) {
           return pickRandom([
             'Our data detective could not find that schema. Please verify the selected table and try again.',
@@ -3913,6 +3923,8 @@
           chartWrap.classList.remove('loading');
           chartFallback.textContent = 'Session expired. Please sign in again.';
           setStatus('Session expired. Please sign in again.');
+          explanationBox.textContent = 'Session expired. Please sign in again.';
+          sqlBox.textContent = 'No SQL generated for this request.';
           failPipelineProgress('Session expired during protected request.');
           openAuthModal();
           return;
@@ -3920,6 +3932,8 @@
         const calmMessage = toCalmMessage(error, 'query');
         chartWrap.classList.remove('loading');
         chartFallback.textContent = calmMessage;
+        explanationBox.textContent = calmMessage;
+        sqlBox.textContent = 'No SQL generated for this request.';
         failPipelineProgress(calmMessage);
         setStatus(calmMessage);
       } finally {

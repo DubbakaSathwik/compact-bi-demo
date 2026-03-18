@@ -1683,9 +1683,19 @@ function inferAnalysisType(question) {
   return 'aggregation';
 }
 
+function hasAverageLikeSignal(text) {
+  const lower = String(text || '').toLowerCase();
+  return /\baverage\b|\bavg\b|\bmean\b|\bdaily\b|\bper\s+day\b|\beach\s+day\b|\bday\s+wise\b/.test(lower);
+}
+
 function inferAggregationType(question) {
   const lower = String(question || '').toLowerCase();
-  if (lower.includes('average') || lower.includes('avg') || lower.includes('mean')) {
+  const hasExplicitAverageWord = /\baverage\b|\bavg\b|\bmean\b/.test(lower);
+  const hasExplicitSumWord = /\bsum\b|\btotal\b|\boverall\b/.test(lower);
+  if (hasExplicitSumWord && !hasExplicitAverageWord) {
+    return 'SUM';
+  }
+  if (hasAverageLikeSignal(lower)) {
     return 'AVG';
   }
   if (lower.includes('count') || lower.includes('how many') || lower.includes('number of')) {
@@ -1698,6 +1708,15 @@ function inferAggregationType(question) {
     return 'MIN';
   }
   return 'SUM';
+}
+
+function metricAlias(metric, aggregationFn = 'SUM') {
+  const fn = String(aggregationFn || 'SUM').toUpperCase();
+  if (fn === 'AVG') return `avg_${metric}`;
+  if (fn === 'COUNT') return `count_${metric}`;
+  if (fn === 'MAX') return `max_${metric}`;
+  if (fn === 'MIN') return `min_${metric}`;
+  return `total_${metric}`;
 }
 
 function isTrendComparisonQuestion(question) {
@@ -1847,7 +1866,8 @@ function intent_extractor(question, schema) {
   }
 
   let aggregationType = inferAggregationType(question);
-  const hasExplicitAggregationSignal = /\baverage\b|\bavg\b|\bmean\b|\bcount\b|\bhow many\b|\bnumber of\b|\bminimum\b|\bmaximum\b|\bmin\b|\bmax\b/.test(lower);
+  const hasExplicitAggregationSignal = hasAverageLikeSignal(lower)
+    || /\bcount\b|\bhow many\b|\bnumber of\b|\bminimum\b|\bmaximum\b|\bmin\b|\bmax\b|\bsum\b|\btotal\b|\boverall\b/.test(lower);
   if (analysisType === 'ranking' && dimensions.length > 0 && !hasExplicitAggregationSignal) {
     aggregationType = 'SUM';
   }
@@ -1973,6 +1993,31 @@ function query_planner(intent, schema, question) {
     };
   }
 
+  // "Who" lookup: "who has/uses highest/lowest [metric]" → raw row lookup, no GROUP BY aggregation.
+  const isWhoLookup = /\bwho\b/i.test(lower)
+    && /\bhighest\b|\blowest\b|\blargest\b|\bsmallest\b|\bmost\b|\bleast\b|\bmax\b|\bmin\b|\bworst\b|\bbest\b/i.test(lower)
+    && !isCorrelation;
+  if (isWhoLookup && metrics.length > 0) {
+    const whoDirection = /\blowest\b|\bsmallest\b|\bleast\b|\bmin\b|\bworst\b/i.test(lower) ? 'ASC' : 'DESC';
+    const whoTopMatch = lower.match(/\btop\s+(\d{1,3})\b/);
+    const whoLimit = whoTopMatch ? Number(whoTopMatch[1]) : 1;
+    const metricCol = metrics[0];
+    const dimCols = schema.columns
+      .filter(c => c.type !== 'NUMBER')
+      .map(c => c.name);
+    return {
+      group_by: [],
+      aggregations: {},
+      lookup_columns: [...dimCols, metricCol],
+      filters,
+      analysis_type: 'ranking',
+      order_by: `${metricCol} ${whoDirection}`,
+      limit: whoLimit,
+      time_grouping: null,
+      no_aggregation: true
+    };
+  }
+
   let timeGrouping = null;
   const needsTimeGrouping = (intent?.analysis_type === 'trend' || isGroupedRanking) && dateColumn;
   if (needsTimeGrouping) {
@@ -1994,11 +2039,12 @@ function query_planner(intent, schema, question) {
 
   let orderBy = null;
   const firstMetric = metrics[0] || null;
+  const firstMetricAlias = firstMetric ? metricAlias(firstMetric, aggregations[firstMetric] || aggregationType) : null;
   if (firstMetric && (intent?.analysis_type === 'ranking' || intent?.analysis_type === 'comparison' || /\btop\b|\bhighest\b|\bbest\b|\brank\b/i.test(lower))) {
-    orderBy = `total_${firstMetric} DESC`;
+    orderBy = `${firstMetricAlias} DESC`;
   }
   if (firstMetric && /\bbottom\b|\blowest\b|\bworst\b/i.test(lower)) {
-    orderBy = `total_${firstMetric} ASC`;
+    orderBy = `${firstMetricAlias} ASC`;
   }
 
   const topMatch = lower.match(/\btop\s+(\d{1,3})\b/);
@@ -2011,9 +2057,9 @@ function query_planner(intent, schema, question) {
   if (isGroupedRanking && firstMetric) {
     const rankingDirection = /\bbottom\b|\blowest\b|\bworst\b/.test(lower) ? 'ASC' : 'DESC';
     if (timeGrouping && (groupedRankingScope.month || groupedRankingScope.year)) {
-      orderBy = `${timeGrouping.alias} ASC, total_${firstMetric} ${rankingDirection}`;
+      orderBy = `${timeGrouping.alias} ASC, ${firstMetricAlias} ${rankingDirection}`;
     } else if (groupBy.length > 0) {
-      orderBy = `${groupBy[0]} ASC, total_${firstMetric} ${rankingDirection}`;
+      orderBy = `${groupBy[0]} ASC, ${firstMetricAlias} ${rankingDirection}`;
     }
   }
 
@@ -2045,6 +2091,21 @@ function sql_generator(queryPlan, schema) {
     };
   }
 
+  // "Who" lookup: raw row selection without aggregation
+  if (queryPlan?.no_aggregation && Array.isArray(queryPlan?.lookup_columns) && queryPlan.lookup_columns.length > 0) {
+    const validCols = queryPlan.lookup_columns.filter(name => schema.columns.some(c => c.name === name));
+    const selectClause = validCols.length > 0 ? validCols.join(', ') : '*';
+    const whereClause = Array.isArray(queryPlan.filters) && queryPlan.filters.length
+      ? ` WHERE ${queryPlan.filters.join(' AND ')}`
+      : '';
+    const orderClause = queryPlan.order_by ? ` ORDER BY ${queryPlan.order_by}` : '';
+    const limitValue = Number.isFinite(queryPlan.limit) && queryPlan.limit > 0 ? queryPlan.limit : 10;
+    return {
+      sql_query: `SELECT ${selectClause} FROM ${schema.tableName}${whereClause}${orderClause} LIMIT ${limitValue}`,
+      chart_type: 'table'
+    };
+  }
+
   const selectParts = [];
   const groupByParts = [];
 
@@ -2066,7 +2127,7 @@ function sql_generator(queryPlan, schema) {
   metricNames.forEach(metric => {
     const fn = String(aggregations[metric] || 'SUM').toUpperCase();
     const safeFn = ['SUM', 'AVG', 'COUNT', 'MAX', 'MIN'].includes(fn) ? fn : 'SUM';
-    selectParts.push(`${safeFn}(${metric}) AS total_${metric}`);
+    selectParts.push(`${safeFn}(${metric}) AS ${metricAlias(metric, safeFn)}`);
   });
 
   const selectClause = selectParts.length ? selectParts.join(', ') : '*';
@@ -2128,9 +2189,10 @@ function repair_query_plan(queryPlan, schema, question) {
   const firstMetric = Object.keys(repaired.aggregations)[0];
   const lower = String(question || '').toLowerCase();
   if (!repaired.order_by && firstMetric && repaired.analysis_type === 'ranking') {
+    const firstMetricAlias = metricAlias(firstMetric, repaired.aggregations[firstMetric] || 'SUM');
     repaired.order_by = /\bbottom\b|\blowest\b|\bworst\b/.test(lower)
-      ? `total_${firstMetric} ASC`
-      : `total_${firstMetric} DESC`;
+      ? `${firstMetricAlias} ASC`
+      : `${firstMetricAlias} DESC`;
   }
 
   return repaired;
@@ -4617,6 +4679,79 @@ function preValidateQuery(question, schema) {
   return { ok: true };
 }
 
+function guardUnsupportedQuestion(question, schema) {
+  const raw = String(question || '').trim();
+  const lower = raw.toLowerCase();
+  const tableName = String(schema?.tableName || DATASET_TABLE_NAME).toLowerCase();
+  const words = lower.match(/[a-z0-9_]+/g) || [];
+  const wordCount = words.length;
+
+  if (!raw || wordCount === 0) {
+    return {
+      ok: false,
+      message: 'Please ask a data question about the selected dataset. Example: Show total sales by region.'
+    };
+  }
+
+  const greetingPattern = /^(hi|hello|hey|yo|hola|good\s+(morning|afternoon|evening)|how\s+are\s+you|what\s+is\s+up|what\s*\'s\s+up|thanks|thank\s+you)[!?.\s]*$/i;
+  const containsHiWord = /\bhi\b/i.test(raw);
+  if (greetingPattern.test(raw) || containsHiWord) {
+    return {
+      ok: false,
+      message: 'Hi. I can help with data questions only. Try: Show total revenue by region.'
+    };
+  }
+
+  const tableOnlyPattern = /^(table|dataset|data|schema|columns?|table\s+name|dataset\s+name)$/i;
+  const simpleNamePattern = /^[a-z0-9_\-\s]{1,40}$/i;
+  const hasAnalysisVerb = /\b(show|list|compare|analy[sz]e|find|filter|group|rank|trend|top|bottom|count|sum|avg|average|total|where|between|over|by)\b/i.test(lower);
+
+  const weakPromptWords = new Set(['how', 'what', 'why', 'when', 'where', 'who', 'which', 'ok', 'okay', 'hmm', 'huh']);
+  if (wordCount <= 2 && words.every(word => weakPromptWords.has(word)) && !hasAnalysisVerb) {
+    return {
+      ok: false,
+      message: `That looks incomplete or unrelated to the dataset. Ask a data question about ${schema.tableName}, for example: Show monthly sales trend.`
+    };
+  }
+
+  if (tableOnlyPattern.test(raw)
+    || lower === tableName
+    || (simpleNamePattern.test(raw) && wordCount <= 3 && !hasAnalysisVerb && (lower.includes('table') || lower.includes('dataset') || lower === tableName))) {
+    return {
+      ok: false,
+      message: `Please ask a full question using one dataset. Current table: ${schema.tableName}. Example: Show top 10 categories by revenue.`
+    };
+  }
+
+  const multiTablePattern = /\b(join|union|merge)\b|\bfrom\s+[a-z0-9_]+\s*(,|and)\s*[a-z0-9_]+\b|\btables?\s+[a-z0-9_]+\s*(,|and)\s*[a-z0-9_]+\b/i;
+  if (multiTablePattern.test(lower)) {
+    return {
+      ok: false,
+      message: `This demo supports one table at a time. Please select a single dataset and ask the question again (current table: ${schema.tableName}).`
+    };
+  }
+
+  const schemaTokens = new Set([
+    tableName,
+    ...((schema?.columns || []).map(column => String(column.name || '').toLowerCase())),
+    'show', 'list', 'compare', 'count', 'sum', 'avg', 'average', 'total', 'top', 'bottom', 'trend', 'group', 'filter', 'where', 'by'
+  ]);
+  const hasSchemaSignal = words.some(word => {
+    if (schemaTokens.has(word)) return true;
+    if (word.length < 4) return false;
+    return [...schemaTokens].some(token => token === word || token.startsWith(word) || word.startsWith(token));
+  });
+  const smallTalkPattern = /\b(weather|joke|movie|song|sport|cricket|football|news|time|date|who\s+are\s+you)\b/i;
+  if ((smallTalkPattern.test(lower) || !hasSchemaSignal) && !hasAnalysisVerb) {
+    return {
+      ok: false,
+      message: `That looks unrelated to the selected dataset. Ask a data question about ${schema.tableName}, for example: Show monthly sales trend.`
+    };
+  }
+
+  return { ok: true };
+}
+
 async function runPipeline(fileName, question, sessionId, parentContext = null, context = null) {
   const validationTrace = [];
   const pushTrace = (stage, message, status = 'ok') => {
@@ -4631,9 +4766,12 @@ async function runPipeline(fileName, question, sessionId, parentContext = null, 
   const dataset = await loadDataset(fileName, context || null);
   pushTrace('query_extracted', 'User question accepted and dataset loaded.');
 
-  // Pre-validation disabled - SQL validator will catch invalid columns
-  // Proceed directly to intent extraction
-  pushTrace('pre_validation', 'Skipped (using post-generation SQL validation).');
+  const guarded = guardUnsupportedQuestion(question, dataset.schema);
+  if (!guarded.ok) {
+    pushTrace('pre_validation', guarded.message, 'error');
+    throw { userFacing: true, message: guarded.message, validationTrace };
+  }
+  pushTrace('pre_validation', 'Input accepted for SQL generation.');
 
   const intent = intent_extractor(question, dataset.schema);
   // Allow questions without explicit metrics - query planner will handle defaults
